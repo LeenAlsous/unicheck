@@ -12,4 +12,7 @@ enum AttendanceSource: string
 
     /** An instructor set or corrected it. */
     case Manual = 'manual';
+
+    /** Marked absent automatically when the session closed. */
+    case Auto = 'auto';
 }

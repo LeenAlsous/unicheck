@@ -11,6 +11,8 @@ backend/
 ├── app/
 │   ├── Enums/                    ← UserRole, SessionStatus, AttendanceStatus, DeviceStatus, ...
 │   ├── Models/                   ← User, Course, Section, Room, LectureSession, AttendanceRecord, Device
+│   ├── Services/                 ← QrCodeService (rotating codes), CheckInService (check-in rules)
+│   ├── Policies/                 ← SectionPolicy: who can see / run a section
 │   └── Http/
 │       ├── Controllers/Api/      ← API endpoints
 │       ├── Requests/             ← input validation
@@ -116,12 +118,70 @@ Route::middleware(['auth:sanctum', 'role:instructor,admin'])->group(function () 
 
 ## Endpoints so far
 
-| Method | Path | Auth | Purpose |
+All paths start with `/api`. The API docs page shows the full request and response of each one.
+
+| Method | Path | Who | Purpose |
 |---|---|---|---|
-| `POST` | `/api/auth/login` | – | Log in, returns a bearer token and the user |
-| `GET` | `/api/auth/me` | Any role | Current user |
-| `POST` | `/api/auth/logout` | Any role | Revoke the current token |
+| `POST` | `/auth/login` | – | Log in, returns a bearer token and the user |
+| `GET` | `/auth/me` | Anyone | Current user |
+| `POST` | `/auth/logout` | Anyone | Revoke the current token |
+| `GET` | `/sections` | Anyone | Home screen: sections I teach / I'm enrolled in (admins: all), with `open_session` while check-in runs |
+| `GET` | `/sections/{section}` | Anyone in the section | One section |
+| `POST` | `/check-ins` | Student | Check in with the scanned QR text and the phone's location |
+| `GET` | `/rooms` | Instructor | Rooms to choose from |
+| `GET` | `/sections/{section}/students` | Instructor | Class list |
+| `GET` | `/sections/{section}/sessions` | Instructor | Past and current lectures with present/absent counts |
+| `POST` | `/sections/{section}/sessions` | Instructor | Start a lecture: opens check-in (15 min by default) and returns `qr_secret` |
+| `GET` | `/sessions/{session}` | Instructor | A lecture with its `qr_secret`, to show the QR again (e.g. on the lecture-room PC) |
+| `POST` | `/sessions/{session}/close` | Instructor | End the lecture; everyone who didn't check in becomes absent |
+| `GET` | `/sessions/{session}/attendance` | Instructor | Live attendance list (poll every ~3 s) |
+| `PUT` | `/sessions/{session}/attendance/{student}` | Instructor | Mark one student present / absent / excused, with a note |
 | `GET` | `/up` | – | Health check for hosting |
+
+"Instructor" means the section's own instructor; admins can do everything instructors can.
+
+## Rotating QR code
+
+The instructor app makes the QR codes itself (like an authenticator app), so the projector
+screen keeps working without calling the server every 10 seconds. With `qr_secret`,
+`qr_step_seconds` and `server_time_ms` from the session response:
+
+```
+step      = floor(server_now_seconds / qr_step_seconds)
+signature = base64url(HMAC-SHA256(key: qr_secret as UTF-8, message: "{session_id}.{step}"))
+            without "=" padding, first 22 characters
+QR text   = "UC1.{session_id}.{step}.{signature}"
+```
+
+`server_now` is the phone's clock corrected by the difference to `server_time_ms`, so a
+phone with the wrong time still shows valid codes. Draw a new QR whenever `step` changes.
+
+Check your Flutter code against this example: session `42`, secret `test-secret`, 10-second
+steps, at 2026-11-09 10:00:00 UTC → `UC1.42.179421840.ToPFKhS-UKQI7KY--PVGfT`
+(the same example is in `tests/Unit/QrCodeServiceTest.php`).
+
+## Check-in rules
+
+`POST /check-ins` checks these in order (`app/Services/CheckInService.php`). If one fails it
+returns **422** with a `message` to show the student as-is:
+
+1. The QR text is a UniCheck code for a lecture that exists.
+2. The student is enrolled in that section.
+3. Check-in is open (the lecture started and its window hasn't ended).
+4. If they already checked in, the same record comes back (**200**), so scanning twice is fine.
+   If the instructor already set their attendance by hand, the scan is refused.
+5. The code is from the current 10-second step or the one before. A screenshot sent to a
+   friend stops working within 20 seconds.
+6. The location isn't faked (`is_mocked`, from Android's `Location.isMocked`).
+7. The phone is within the room's radius (75 m by default, building-sized because indoor
+   GPS is inaccurate). Up to 50 m of the reported GPS error is forgiven.
+
+A successful check-in returns **201**. Some check-ins are accepted but get `flags` for the
+instructor to review: `token_near_expiry` (used the previous code), `weak_location_signal`
+(GPS accuracy worse than 50 m), and `far_from_class` (more than 50 m from the middle of the
+students who already checked in, once there are at least 5).
+
+Not done yet: device binding (one phone per student, signed check-ins).
 
 ## Tests
 
