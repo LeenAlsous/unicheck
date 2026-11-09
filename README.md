@@ -9,9 +9,8 @@ window make it hard to mark attendance without being in the room.
 
 | Folder | What it is | Stack |
 |---|---|---|
-| [`api/`](api) | Backend REST API + real-time updates | ASP.NET Core (.NET 10), EF Core, SignalR |
-| [`portal/`](portal) | Instructor / admin web portal | React + TypeScript (Vite) |
-| [`app/`](app) | Student mobile app | Flutter |
+| [`backend/`](backend) | REST API used by both apps | Laravel 13, MySQL, Sanctum |
+| [`app/`](app) | One Flutter app for students and instructors | Flutter (Android, iOS, and web for the projector screen) |
 | [`docs/`](docs) | Plan, design notes, report material | Markdown |
 
 Each folder has its own README with setup and run instructions.
@@ -20,10 +19,8 @@ Each folder has its own README with setup and run instructions.
 
 Requirements:
 
-- [.NET SDK 10](https://dotnet.microsoft.com/download)
-- [Node.js](https://nodejs.org/) 20 or newer
+- PHP 8.3+, [Composer](https://getcomposer.org/) and MySQL (XAMPP on Windows is fine)
 - [Flutter](https://docs.flutter.dev/get-started/install) (stable channel)
-- A database server (PostgreSQL or SQL Server — see [docs/plan.md](docs/plan.md))
 
 ```bash
 git clone https://github.com/LeenAlsous/unicheck.git
@@ -35,7 +32,6 @@ Then follow the README in the folder you are working on.
 ## Working together
 
 - Work on a branch (`feature/<short-name>`) and open a pull request into `main`.
-- Keep changes to one folder per pull request when you can; if an API change needs a
-  matching portal or app change, put them in the same pull request.
-- Never commit secrets (connection strings, keys). Use `dotnet user-secrets` for the API
-  and `.env.local` for the portal.
+- If a backend change needs a matching app change, put them in the same pull request.
+- Never commit secrets (passwords, keys). The backend reads them from `backend/.env`,
+  which is not committed; `backend/.env.example` shows the keys.

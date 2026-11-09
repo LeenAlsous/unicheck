@@ -2,13 +2,19 @@
 
 ## Stack
 
-- **Backend:** ASP.NET Core Web API (.NET 10), EF Core, SignalR, QuestPDF + ClosedXML for exports
-- **Instructor portal:** React + TypeScript (Vite)
-- **Student app:** Flutter — needed for device-bound keys, mock-location detection,
-  Play Integrity / App Attest and push notifications, which a website cannot do reliably
-- **Database:** PostgreSQL or SQL Server (open decision — EF Core makes either a small change)
-- **Hosting:** laptop + tunnel (Cloudflare Tunnel / ngrok) during development; decide on
-  real hosting after the first milestone
+- **Backend:** Laravel 13 REST API, MySQL, Sanctum bearer tokens
+- **App:** one Flutter app for students and instructors. Flutter is needed for
+  device-bound keys, mock-location detection, Play Integrity / App Attest and push
+  notifications. The instructor screens are also built for web, so the rotating QR can be
+  shown from the lecture-room PC on the projector.
+- **Hosting:** decided later. Develop locally; phones reach the laptop over the same Wi-Fi
+  (`php artisan serve --host=0.0.0.0`) or a tunnel.
+
+### Keeping the backend simple
+
+- The rotating QR is generated **inside the instructor app** from the session's secret
+  (like an authenticator app); the server only validates codes. No WebSockets needed.
+- The live attendance list **polls** the API every ~3 seconds.
 
 ## Anti-fraud layers
 
@@ -26,19 +32,19 @@ integrity checks but not eliminated.
 
 ## Data model (core tables)
 
-Users (role: Student / Instructor / Admin) · Courses · Sections · Enrollments · Rooms ·
-Sessions · AttendanceRecords · Devices · AbsencePolicies · Notifications
+users (role: student / instructor / admin) · courses · sections · enrollments · rooms ·
+lecture_sessions · attendance_records · devices
 
 ## Week 1 — target ~75% by Sat Nov 14, 2026
 
 | Day | Goal by end of day |
 |---|---|
-| Sat Nov 7 | Repo, backend skeleton, database, login (JWT + roles), seed data; tunnel test from a phone |
-| Sun Nov 8 | Courses + student Excel import, sessions, rotating QR (SignalR), check-in endpoint with all server checks |
-| Mon Nov 9 | Portal: login, courses, student lists, rooms (map pin), "Start session" → full-screen QR |
-| Tue Nov 10 | Portal: live attendance list, manual edits, session history |
-| Wed Nov 11 | App: login, device key registration, course list, scanner → check-in |
-| Thu Nov 12 | App: location + mock detection, history; first real classroom test |
+| Sat Nov 7 | Repo set up; stack changed to Laravel + Flutter |
+| Sun Nov 8 | ✅ Laravel skeleton: tables, seed data, token login with roles, API docs, tests. Next: courses, sessions, QR validation, check-in endpoint |
+| Mon Nov 9 | Finish backend check-in rules; Flutter app skeleton: login, role-based home |
+| Tue Nov 10 | Instructor screens: courses, student lists, start session → full-screen QR, live attendance |
+| Wed Nov 11 | Student screens: device key registration, course list, scanner → check-in |
+| Thu Nov 12 | Location + mock detection, history; first real classroom test |
 | Fri Nov 13 | Absence-limit alerts (FCM), PDF / Excel reports |
 | Sat Nov 14 | Bug fixing, full end-to-end demo |
 
