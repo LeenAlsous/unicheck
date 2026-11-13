@@ -32,7 +32,7 @@ class Section {
   final String instructorName;
   final int studentsCount;
   final String? roomName; // e.g. "IT Building 101", or null if not set
-  final bool hasOpenSession; // a lecture is running right now
+  final int? openSessionId; // the lecture running right now, or null
   final bool checkInOpen; // students can scan the QR right now
 
   Section({
@@ -44,9 +44,11 @@ class Section {
     required this.instructorName,
     required this.studentsCount,
     required this.roomName,
-    required this.hasOpenSession,
+    required this.openSessionId,
     required this.checkInOpen,
   });
+
+  bool get hasOpenSession => openSessionId != null;
 
   factory Section.fromJson(Map<String, dynamic> json) {
     final room = json['default_room'];
@@ -61,8 +63,119 @@ class Section {
       instructorName: json['instructor']['name'],
       studentsCount: json['students_count'] ?? 0,
       roomName: room == null ? null : '${room['building']} ${room['name']}',
-      hasOpenSession: session != null,
+      openSessionId: session?['id'],
       checkInOpen: session != null && session['check_in_open'] == true,
+    );
+  }
+}
+
+/// A lecture, as the instructor sees it (with the secret for the QR code).
+class Lecture {
+  final int id;
+  final String status; // "open" or "closed"
+  final DateTime? closesAt; // when check-in ends
+  final String? roomName;
+  final String qrSecret;
+  final int qrStepSeconds; // the QR changes every this many seconds (10)
+
+  // How far the phone's clock is from the server's clock, in milliseconds.
+  // The QR code depends on the time, so we use the server's time.
+  final int clockOffsetMs;
+
+  Lecture({
+    required this.id,
+    required this.status,
+    required this.closesAt,
+    required this.roomName,
+    required this.qrSecret,
+    required this.qrStepSeconds,
+    required this.clockOffsetMs,
+  });
+
+  factory Lecture.fromJson(Map<String, dynamic> json) {
+    final room = json['room'];
+    final int serverTimeMs = json['server_time_ms'];
+
+    return Lecture(
+      id: json['id'],
+      status: json['status'],
+      closesAt: json['closes_at'] == null
+          ? null
+          : DateTime.parse(json['closes_at']),
+      roomName: room == null ? null : '${room['building']} ${room['name']}',
+      qrSecret: json['qr_secret'],
+      qrStepSeconds: json['qr_step_seconds'],
+      clockOffsetMs: serverTimeMs - DateTime.now().millisecondsSinceEpoch,
+    );
+  }
+}
+
+/// One row of the live attendance list.
+class AttendanceEntry {
+  final int studentId;
+  final String universityId;
+  final String name;
+  final String?
+  status; // "present", "absent", "excused", or null = not checked in yet
+  final List<String> flags; // e.g. ["weak_location_signal"]
+
+  AttendanceEntry({
+    required this.studentId,
+    required this.universityId,
+    required this.name,
+    required this.status,
+    required this.flags,
+  });
+
+  factory AttendanceEntry.fromJson(Map<String, dynamic> json) {
+    final student = json['student'];
+    final attendance = json['attendance'];
+
+    return AttendanceEntry(
+      studentId: student['id'],
+      universityId: student['university_id'],
+      name: student['name'],
+      status: attendance?['status'],
+      flags: List<String>.from(attendance?['flags'] ?? []),
+    );
+  }
+}
+
+/// The live attendance list of a lecture, with totals.
+class AttendanceList {
+  final String sessionStatus; // "open" or "closed"
+  final DateTime? closesAt;
+  final int enrolled;
+  final int present;
+  final int absent;
+  final int excused;
+  final List<AttendanceEntry> students;
+
+  AttendanceList({
+    required this.sessionStatus,
+    required this.closesAt,
+    required this.enrolled,
+    required this.present,
+    required this.absent,
+    required this.excused,
+    required this.students,
+  });
+
+  factory AttendanceList.fromJson(Map<String, dynamic> json) {
+    final session = json['session'];
+    final summary = json['summary'];
+    final List students = json['students'];
+
+    return AttendanceList(
+      sessionStatus: session['status'],
+      closesAt: session['closes_at'] == null
+          ? null
+          : DateTime.parse(session['closes_at']),
+      enrolled: summary['enrolled'],
+      present: summary['present'],
+      absent: summary['absent'],
+      excused: summary['excused'],
+      students: students.map((json) => AttendanceEntry.fromJson(json)).toList(),
     );
   }
 }

@@ -12,6 +12,12 @@ One Flutter app for both roles; the screens shown depend on who logs in.
 home screen for each role (student: "My courses" with a *Check-in open* label; instructor:
 "My sections" with student count, room and a *Lecture running* label).
 
+**Instructors:** tap a section to start a lecture. The lecture screen shows the rotating QR
+code (new code every 10 seconds) and the live list of who checked in (refreshes every 3
+seconds; flagged check-ins say what to check, e.g. "weak GPS"). Tap a student to mark them
+present / absent / excused, and tap **End lecture** to mark everyone else absent. On a wide
+screen (the projector) the QR and the list are side by side.
+
 ## Run it
 
 1. Start the backend first (see [`../backend/README.md`](../backend/README.md)):
@@ -49,12 +55,14 @@ Kept simple on purpose: screens use `setState`, and all server calls are in one 
 lib/
 ├── main.dart                         ← starts the app
 ├── api.dart                          ← every call to the backend (login, sections, ...)
-├── models.dart                       ← User, Section (JSON → Dart)
+├── models.dart                       ← User, Section, Lecture, AttendanceList (JSON → Dart)
+├── qr_code.dart                      ← makes the rotating QR code (same recipe as the backend)
 └── screens/
     ├── start_screen.dart             ← checks if the user is already logged in
     ├── login_screen.dart
     ├── student_home_screen.dart      ← "My courses"
-    └── instructor_home_screen.dart   ← "My sections"
+    ├── instructor_home_screen.dart   ← "My sections", tap one to start a lecture
+    └── lecture_screen.dart           ← QR code + live attendance list
 ```
 
 To add a server call: add a method to `Api` in `api.dart`, then call it from a screen inside

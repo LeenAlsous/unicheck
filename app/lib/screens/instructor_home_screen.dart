@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../api.dart';
 import '../models.dart';
+import 'lecture_screen.dart';
 import 'login_screen.dart';
 
 /// The sections an instructor teaches (admins see all sections).
@@ -41,6 +42,55 @@ class _InstructorHomeScreenState extends State<InstructorHomeScreen> {
         loading = false;
       });
     }
+  }
+
+  // Tap a section: continue its running lecture, or start a new one.
+  Future<void> openLecture(Section section) async {
+    int? sessionId = section.openSessionId;
+
+    if (sessionId == null) {
+      final start = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('Start a lecture for ${section.courseCode}?'),
+          content: const Text(
+            'A QR code will appear for students to scan. Check-in stays open for 15 minutes.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Start'),
+            ),
+          ],
+        ),
+      );
+      if (start != true) return;
+
+      try {
+        sessionId = await Api.startLecture(section.id);
+      } on ApiException catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(e.message)));
+        return;
+      }
+    }
+
+    if (!mounted) return;
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => LectureScreen(
+          sessionId: sessionId!,
+          title: '${section.courseCode} - ${section.courseName}',
+        ),
+      ),
+    );
+    loadSections(); // the lecture may have ended while we were away
   }
 
   Future<void> logout() async {
@@ -93,7 +143,7 @@ class _InstructorHomeScreenState extends State<InstructorHomeScreen> {
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          Text('Hi, ${widget.user.name}'),
+          Text('Hi, ${widget.user.name}. Tap a section to start a lecture.'),
           const SizedBox(height: 12),
           if (sections.isEmpty) const Text("You don't teach any sections."),
           for (final section in sections)
@@ -109,7 +159,8 @@ class _InstructorHomeScreenState extends State<InstructorHomeScreen> {
                 ),
                 trailing: section.hasOpenSession
                     ? const Chip(label: Text('Lecture running'))
-                    : null,
+                    : const Icon(Icons.play_circle_outline),
+                onTap: () => openLecture(section),
               ),
             ),
         ],

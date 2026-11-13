@@ -57,6 +57,16 @@ class Api {
     );
   }
 
+  static Future<dynamic> _put(String path, Map<String, dynamic> body) {
+    return _send(
+      http.put(
+        Uri.parse(baseUrl + path),
+        headers: _headers,
+        body: jsonEncode(body),
+      ),
+    );
+  }
+
   /// Waits for the response and returns its JSON, or throws an [ApiException].
   static Future<dynamic> _send(Future<http.Response> request) async {
     http.Response response;
@@ -130,5 +140,41 @@ class Api {
   static Future<List<Section>> getSections() async {
     final List data = await _get('/sections');
     return data.map((json) => Section.fromJson(json)).toList();
+  }
+
+  // ---------- Instructors ----------
+
+  /// Starts a lecture (check-in opens for 15 minutes). Returns the lecture's ID.
+  static Future<int> startLecture(int sectionId) async {
+    final data = await _post('/sections/$sectionId/sessions');
+    return data['id'];
+  }
+
+  /// A lecture with its QR secret.
+  static Future<Lecture> getLecture(int sessionId) async {
+    return Lecture.fromJson(await _get('/sessions/$sessionId'));
+  }
+
+  /// Who has checked in so far.
+  static Future<AttendanceList> getAttendance(int sessionId) async {
+    return AttendanceList.fromJson(
+      await _get('/sessions/$sessionId/attendance'),
+    );
+  }
+
+  /// Ends the lecture. Students who didn't check in are marked absent.
+  static Future<void> endLecture(int sessionId) async {
+    await _post('/sessions/$sessionId/close');
+  }
+
+  /// Sets a student's attendance by hand: "present", "absent" or "excused".
+  static Future<void> markAttendance(
+    int sessionId,
+    int studentId,
+    String status,
+  ) async {
+    await _put('/sessions/$sessionId/attendance/$studentId', {
+      'status': status,
+    });
   }
 }
