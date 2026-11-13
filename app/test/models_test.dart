@@ -105,4 +105,20 @@ void main() {
     expect(list.students[1].status, null);
     expect(list.students[1].flags, isEmpty);
   });
+
+  test('reads a phone', () {
+    final phone = Phone.fromJson({
+      'id': 3,
+      'student_id': 4,
+      'name': 'iPhone',
+      'last_used_at': '2026-11-13T09:00:00.000000Z',
+      'created_at': '2026-11-01T09:00:00.000000Z',
+      'updated_at': '2026-11-13T09:00:00.000000Z',
+      'is_this_phone': true,
+    });
+
+    expect(phone.name, 'iPhone');
+    expect(phone.addedAt, DateTime.utc(2026, 11, 1, 9));
+    expect(phone.isThisPhone, true);
+  });
 }

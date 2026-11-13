@@ -18,6 +18,11 @@ seconds; flagged check-ins say what to check, e.g. "weak GPS"). Tap a student to
 present / absent / excused, and tap **End lecture** to mark everyone else absent. On a wide
 screen (the projector) the QR and the list are side by side.
 
+**Phones:** a student can log in on several phones (lost or new phone), but each phone works
+for one student only, so you can't log in to a friend's account on your phone. Students see
+their phones under **My phones** (the phone icon on "My courses") and can remove a lost or
+sold one. Students can't log in on the web version; it is for instructors.
+
 **Students:** tap **Scan QR code** on "My courses". The app first gets the phone's location
 (it asks for permission), then scans the QR on the lecture screen and checks in right away.
 If the server refuses, the student sees why (expired code, not in the room, fake location
@@ -70,6 +75,7 @@ lib/
     ├── login_screen.dart
     ├── student_home_screen.dart      ← "My courses" + Scan QR code button
     ├── scan_screen.dart              ← camera scanner + location, sends the check-in
+    ├── my_phones_screen.dart         ← the student's phones, remove a lost one
     ├── instructor_home_screen.dart   ← "My sections", tap one to start a lecture
     └── lecture_screen.dart           ← QR code + live attendance list
 ```

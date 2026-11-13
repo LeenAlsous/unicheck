@@ -32,6 +32,7 @@ class CheckInTest extends TestCase
         $this->session = LectureSession::factory()->open()->create();
         $this->student = User::factory()->create();
         $this->session->section->students()->attach($this->student);
+        $this->student->devices()->create(['device_uid' => 'my-phone', 'name' => 'iPhone']);
         Sanctum::actingAs($this->student);
     }
 
@@ -87,9 +88,11 @@ class CheckInTest extends TestCase
 
     public function test_student_not_in_the_section_is_rejected(): void
     {
-        Sanctum::actingAs(User::factory()->create());
+        $outsider = User::factory()->create();
+        $outsider->devices()->create(['device_uid' => 'outsider-phone']);
+        Sanctum::actingAs($outsider);
 
-        $this->checkIn()
+        $this->checkIn(['device_uid' => 'outsider-phone'])
             ->assertUnprocessable()
             ->assertJsonPath('errors.code.0', "You aren't enrolled in this class.");
     }
@@ -181,6 +184,28 @@ class CheckInTest extends TestCase
         $this->checkIn()->assertForbidden();
     }
 
+    public function test_check_in_from_someone_elses_phone_is_rejected(): void
+    {
+        $friend = User::factory()->create();
+        $friend->devices()->create(['device_uid' => 'friends-phone']);
+
+        $this->checkIn(['device_uid' => 'friends-phone'])
+            ->assertUnprocessable()
+            ->assertJsonPath('errors.code.0', "This phone isn't registered to your account. Log out and log in again.");
+    }
+
+    public function test_check_in_records_the_phone_and_flags_a_new_second_phone(): void
+    {
+        // The student's old phone was added long ago; the new one today.
+        $this->student->devices()->where('device_uid', 'my-phone')->update(['created_at' => now()->subMonth()]);
+        $newPhone = $this->student->devices()->create(['device_uid' => 'new-phone']);
+
+        $this->checkIn(['device_uid' => 'new-phone'])
+            ->assertCreated()
+            ->assertJsonPath('device_id', $newPhone->id)
+            ->assertJsonPath('flags', ['new_phone']);
+    }
+
     private function currentCode(): string
     {
         $qrCodes = app(QrCodeService::class);
@@ -198,6 +223,7 @@ class CheckInTest extends TestCase
             'latitude' => self::ROOM_LAT,
             'longitude' => self::ROOM_LNG,
             'accuracy_meters' => 10,
+            'device_uid' => 'my-phone',
         ], $overrides));
     }
 }

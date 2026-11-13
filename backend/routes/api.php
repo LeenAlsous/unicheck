@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AttendanceController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CheckInController;
+use App\Http\Controllers\Api\DeviceController;
 use App\Http\Controllers\Api\LectureSessionController;
 use App\Http\Controllers\Api\RoomController;
 use App\Http\Controllers\Api\SectionController;
@@ -19,6 +20,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/sections/{section}', [SectionController::class, 'show']);
 
     Route::post('/check-ins', [CheckInController::class, 'store'])->middleware(['role:student', 'throttle:20,1']);
+    Route::get('/devices', [DeviceController::class, 'index'])->middleware('role:student');
+    Route::delete('/devices/{device}', [DeviceController::class, 'destroy'])->middleware('role:student');
 
     Route::middleware('role:instructor,admin')->group(function () {
         Route::get('/rooms', [RoomController::class, 'index']);

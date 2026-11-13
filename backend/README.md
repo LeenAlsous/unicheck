@@ -106,6 +106,22 @@ Accept: application/json
 
 Tokens expire after 30 days (`SANCTUM_TOKEN_EXPIRATION`, in minutes).
 
+## Students' phones
+
+Students log in from the phone app, which also sends `device_uid` (a hash of the phone's
+built-in ID, which stays the same if the app is deleted and installed again).
+
+- A student can use **several phones**, e.g. after losing or replacing one. Each new phone is
+  added to their account when they log in on it.
+- Each phone belongs to **one student only**. Logging in to another student's account from it
+  is refused: "This phone is registered to another student."
+- Every check-in sends `device_uid` too, and it must be one of the student's own phones.
+- A lost or sold phone can be removed in the app (**My phones**): it is logged out, and another
+  student can use it after that. A factory reset also gives the phone a new ID.
+- A check-in from a phone added in the last 24 hours (when the student has another phone)
+  gets the `new_phone` flag, so the instructor can double-check.
+- Instructors and admins don't need a phone ID (they also use the web version).
+
 Restrict a route to some roles with the `role` middleware:
 
 ```php
@@ -124,6 +140,8 @@ All paths start with `/api`. The API docs page shows the full request and respon
 | `GET` | `/sections` | Anyone | Home screen: sections I teach / I'm enrolled in (admins: all), with `open_session` while check-in runs |
 | `GET` | `/sections/{section}` | Anyone in the section | One section |
 | `POST` | `/check-ins` | Student | Check in with the scanned QR text and the phone's location |
+| `GET` | `/devices` | Student | My phones (`is_this_phone` marks the current one) |
+| `DELETE` | `/devices/{device}` | Student | Remove a lost or sold phone (logs it out) |
 | `GET` | `/rooms` | Instructor | Rooms to choose from |
 | `GET` | `/sections/{section}/students` | Instructor | Class list |
 | `GET` | `/sections/{section}/sessions` | Instructor | Past and current lectures with present/absent counts |
@@ -161,6 +179,7 @@ steps, at 2026-11-09 10:00:00 UTC → `42-179421840-7c8a89cf`
 `POST /check-ins` checks these in order (`app/Http/Controllers/Api/CheckInController.php`). If one fails it
 returns **422** with a `message` to show the student as-is:
 
+0. The check-in comes from one of the student's own phones (`device_uid`).
 1. The QR text is a UniCheck code for a lecture that exists.
 2. The student is enrolled in that section.
 3. Check-in is open (the lecture started and its window hasn't ended).
@@ -174,10 +193,8 @@ returns **422** with a `message` to show the student as-is:
 
 A successful check-in returns **201**. Some check-ins are accepted but get `flags` for the
 instructor to review: `token_near_expiry` (used the previous code), `weak_location_signal`
-(GPS accuracy worse than 50 m), and `far_from_class` (more than 50 m from the middle of the
-students who already checked in, once there are at least 5).
-
-Not done yet: device binding (one phone per student, signed check-ins).
+(GPS accuracy worse than 50 m), `far_from_class` (more than 50 m from the middle of the
+students who already checked in, once there are at least 5), and `new_phone` (see above).
 
 ## Tests
 

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../api.dart';
 import '../models.dart';
 import 'login_screen.dart';
+import 'my_phones_screen.dart';
 import 'scan_screen.dart';
 
 /// The student's courses. Shows "Check-in open" when a lecture is running.
@@ -67,6 +68,14 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
       appBar: AppBar(
         title: const Text('My courses'),
         actions: [
+          IconButton(
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const MyPhonesScreen()),
+            ),
+            icon: const Icon(Icons.smartphone),
+            tooltip: 'My phones',
+          ),
           IconButton(
             onPressed: logout,
             icon: const Icon(Icons.logout),

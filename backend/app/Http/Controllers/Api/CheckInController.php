@@ -26,6 +26,7 @@ class CheckInController extends Controller
             'longitude' => 'required|numeric|between:-180,180',
             'accuracy_meters' => 'required|numeric|min:0', // GPS accuracy reported by the phone
             'is_mocked' => 'sometimes|boolean', // true if the phone says the location is fake
+            'device_uid' => 'required|string|max:100', // the phone's ID, sent by the app
         ]);
 
         $student = $request->user();
@@ -33,6 +34,12 @@ class CheckInController extends Controller
         $latitude = (float) $request->latitude;
         $longitude = (float) $request->longitude;
         $accuracy = (float) $request->accuracy_meters;
+
+        // 0. The check-in must come from one of the student's own phones.
+        $device = $student->devices()->where('device_uid', $request->device_uid)->first();
+        if (! $device) {
+            $this->reject('code', "This phone isn't registered to your account. Log out and log in again.");
+        }
 
         // 1. Find the lecture from the code.
         $sessionId = $qrCodes->sessionIdFrom($code);
@@ -88,6 +95,9 @@ class CheckInController extends Controller
         if ($this->isFarFromClass($session, $latitude, $longitude)) {
             $flags[] = 'far_from_class';
         }
+        if ($device->created_at->gt(now()->subDay()) && $student->devices()->count() > 1) {
+            $flags[] = 'new_phone'; // added another phone in the last 24 hours
+        }
 
         $record = AttendanceRecord::create([
             'lecture_session_id' => $session->id,
@@ -98,8 +108,11 @@ class CheckInController extends Controller
             'latitude' => $latitude,
             'longitude' => $longitude,
             'accuracy_meters' => $accuracy,
+            'device_id' => $device->id,
             'flags' => $flags,
         ]);
+
+        $device->update(['last_used_at' => now()]);
 
         return response()->json($record, 201);
     }

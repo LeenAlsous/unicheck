@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:flutter_udid/flutter_udid.dart';
 import 'package:http/http.dart' as http;
 
 import 'models.dart';
@@ -57,6 +58,10 @@ class Api {
     );
   }
 
+  static Future<dynamic> _delete(String path) {
+    return _send(http.delete(Uri.parse(baseUrl + path), headers: _headers));
+  }
+
   static Future<dynamic> _put(String path, Map<String, dynamic> body) {
     return _send(
       http.put(
@@ -95,12 +100,28 @@ class Api {
     );
   }
 
+  /// The phone's ID: a hash of the phone's built-in ID, so it stays the same even if the
+  /// app is deleted and installed again. The server uses it so that one phone can only
+  /// be used by one student. Null on the web (instructors don't need it).
+  static Future<String?> phoneId() async {
+    if (kIsWeb) return null;
+    return FlutterUdid.consistentUdid;
+  }
+
+  static String get phoneName {
+    if (kIsWeb) return 'Web browser';
+    return defaultTargetPlatform == TargetPlatform.iOS
+        ? 'iPhone'
+        : 'Android phone';
+  }
+
   /// Logs in and saves the token on the phone, so the user stays logged in.
   static Future<User> login(String universityId, String password) async {
     final data = await _post('/auth/login', {
       'university_id': universityId.trim(),
       'password': password,
-      'device_name': 'UniCheck app',
+      'device_uid': await phoneId(),
+      'device_name': phoneName,
     });
 
     token = data['token'];
@@ -159,7 +180,19 @@ class Api {
       'longitude': longitude,
       'accuracy_meters': accuracy,
       'is_mocked': isMocked,
+      'device_uid': await phoneId(),
     });
+  }
+
+  /// The phones the student has logged in from.
+  static Future<List<Phone>> getMyPhones() async {
+    final List data = await _get('/devices');
+    return data.map((json) => Phone.fromJson(json)).toList();
+  }
+
+  /// Removes a lost or sold phone: it gets logged out, and another student can use it.
+  static Future<void> removePhone(int phoneId) async {
+    await _delete('/devices/$phoneId');
   }
 
   // ---------- Instructors ----------

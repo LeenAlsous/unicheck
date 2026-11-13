@@ -179,3 +179,32 @@ class AttendanceList {
     );
   }
 }
+
+/// One of the student's phones.
+class Phone {
+  final int id;
+  final String name; // e.g. "iPhone"
+  final DateTime addedAt;
+  final DateTime? lastUsedAt;
+  final bool isThisPhone; // the phone the app is running on
+
+  Phone({
+    required this.id,
+    required this.name,
+    required this.addedAt,
+    required this.lastUsedAt,
+    required this.isThisPhone,
+  });
+
+  factory Phone.fromJson(Map<String, dynamic> json) {
+    return Phone(
+      id: json['id'],
+      name: json['name'] ?? 'Phone',
+      addedAt: DateTime.parse(json['created_at']),
+      lastUsedAt: json['last_used_at'] == null
+          ? null
+          : DateTime.parse(json['last_used_at']),
+      isThisPhone: json['is_this_phone'] == true,
+    );
+  }
+}

@@ -11,18 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Students' phones. A student can have several phones (lost or new phone),
+        // but each phone belongs to only one student.
         Schema::create('devices', function (Blueprint $table) {
             $table->id();
             $table->foreignId('student_id')->constrained('users')->cascadeOnDelete();
-            // Public half of the key pair the app keeps in secure hardware; check-ins are signed with it.
-            $table->string('public_key', 512)->unique();
-            $table->string('platform', 20);
-            $table->string('model', 100)->nullable();
-            $table->string('status', 20);
-            $table->timestamp('approved_at')->nullable();
+            // The phone's ID from the app (a hash of the phone's built-in ID). Unique: one phone, one student.
+            $table->string('device_uid', 100)->unique();
+            $table->string('name', 100)->nullable(); // e.g. "iPhone" or "Android phone"
+            $table->timestamp('last_used_at')->nullable();
             $table->timestamps();
-
-            $table->index(['student_id', 'status']);
         });
     }
 

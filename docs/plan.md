@@ -22,7 +22,7 @@
 |---|---|---|
 | Rotating QR (new code every ~10 s, HMAC-signed, accept current + previous step) | Screenshots forwarded to friends | Scanning only through the in-app camera, no gallery import |
 | Geofence (building radius ~50–100 m, uses GPS accuracy) | Checking in from home | Reject mocked locations; room-level precision comes from the QR, not GPS |
-| Device binding (key pair in Keystore / Secure Enclave, signed check-ins) | One person checking in for several accounts | One device per account, one account per device per session; device change needs approval |
+| Phone binding (the phone's built-in ID, sent at login and with every check-in) | One person checking in for several accounts | A student can have several phones (lost or new phone), but each phone belongs to one student only; lost or sold phones can be removed; a new second phone is flagged for 24 hours |
 | Short check-in window | Late check-ins after the code spreads | Instructor opens/closes the window |
 | Flags + instructor review | Edge cases the checks can't decide | Weak GPS, far from the class cluster, recent device change; random roll-call button |
 
@@ -43,7 +43,7 @@ lecture_sessions · attendance_records · devices
 | Sun Nov 8 | ✅ Laravel skeleton: tables, seed data, token login with roles, API docs, tests. Next: courses, sessions, QR validation, check-in endpoint |
 | Mon Nov 9 | ✅ Backend: sections, start/close lectures, QR check, check-in rules, live list, manual marking. Flutter app skeleton (login, role-based home) ✅ done Fri Nov 13 |
 | Tue Nov 10 | ✅ (done Fri Nov 13) Instructor screens: courses, start lecture → rotating QR, live attendance, manual marking, end lecture |
-| Wed Nov 11 | ✅ (done Fri Nov 13) Student screens: course list, scanner → check-in with location and fake-location check. Not done: device key registration |
+| Wed Nov 11 | ✅ (done Fri Nov 13) Student screens: course list, scanner → check-in with location and fake-location check, phone binding (several phones per student, one student per phone) |
 | Thu Nov 12 | Location + mock detection, history; first real classroom test |
 | Fri Nov 13 | Absence-limit alerts (FCM), PDF / Excel reports |
 | Sat Nov 14 | Bug fixing, full end-to-end demo |

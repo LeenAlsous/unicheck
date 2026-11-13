@@ -328,6 +328,8 @@ class _LectureScreenState extends State<LectureScreen> {
         return 'weak GPS';
       case 'far_from_class':
         return 'far from the class';
+      case 'new_phone':
+        return 'new phone';
       default:
         return flag;
     }

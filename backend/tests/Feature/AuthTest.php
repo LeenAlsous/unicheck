@@ -73,7 +73,7 @@ class AuthTest extends TestCase
     public function test_logout_revokes_the_token(): void
     {
         User::factory()->create(['university_id' => 'S0003']);
-        $token = $this->postJson('/api/auth/login', ['university_id' => 'S0003', 'password' => 'password'])
+        $token = $this->postJson('/api/auth/login', ['university_id' => 'S0003', 'password' => 'password', 'device_uid' => 'phone-a'])
             ->json('token');
 
         $this->withToken($token)->postJson('/api/auth/logout')->assertNoContent();
