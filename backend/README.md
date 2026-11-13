@@ -9,14 +9,10 @@ instructors) talk to this API.
 ```
 backend/
 ├── app/
-│   ├── Enums/                    ← UserRole, SessionStatus, AttendanceStatus, DeviceStatus, ...
 │   ├── Models/                   ← User, Course, Section, Room, LectureSession, AttendanceRecord, Device
-│   ├── Services/                 ← QrCodeService (rotating codes), CheckInService (check-in rules)
-│   ├── Policies/                 ← SectionPolicy: who can see / run a section
+│   ├── Services/QrCodeService.php← makes and checks the rotating QR codes
 │   └── Http/
-│       ├── Controllers/Api/      ← API endpoints
-│       ├── Requests/             ← input validation
-│       ├── Resources/            ← JSON shapes returned to the apps
+│       ├── Controllers/Api/      ← API endpoints: validation, permission checks and logic are all here
 │       └── Middleware/           ← EnsureUserHasRole (`role:instructor,admin`)
 ├── database/
 │   ├── migrations/               ← table definitions
@@ -162,7 +158,7 @@ steps, at 2026-11-09 10:00:00 UTC → `42-179421840-7c8a89cf`
 
 ## Check-in rules
 
-`POST /check-ins` checks these in order (`app/Services/CheckInService.php`). If one fails it
+`POST /check-ins` checks these in order (`app/Http/Controllers/Api/CheckInController.php`). If one fails it
 returns **422** with a `message` to show the student as-is:
 
 1. The QR text is a UniCheck code for a lecture that exists.

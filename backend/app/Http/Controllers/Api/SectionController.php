@@ -2,65 +2,58 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
-use App\Http\Resources\SectionResource;
-use App\Http\Resources\StudentResource;
 use App\Models\Section;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Illuminate\Support\Facades\Gate;
 
-/**
- * Class sections: the home screen list for both roles.
- */
 class SectionController extends Controller
 {
     /**
-     * My sections.
+     * My sections (the home screen).
      *
-     * Instructors get the sections they teach, students the sections they're enrolled in,
-     * admins every section. `open_session` is set while check-in is running.
+     * Instructors get the sections they teach, students the ones they're enrolled in, admins all.
+     * `open_session` is set while a lecture is running.
      */
-    public function index(Request $request): AnonymousResourceCollection
+    public function index(Request $request)
     {
         $user = $request->user();
 
-        $sections = Section::query()
-            ->with(['course', 'instructor', 'defaultRoom', 'openSession.room'])
-            ->withCount('students')
-            ->when($user->role === UserRole::Instructor, fn (Builder $q) => $q->where('instructor_id', $user->id))
-            ->when($user->role === UserRole::Student, fn (Builder $q) => $q->whereHas(
-                'students',
-                fn (Builder $students) => $students->whereKey($user->id),
-            ))
-            ->orderByDesc('semester')
-            ->orderBy('id')
-            ->get();
+        $query = Section::with(['course', 'instructor', 'defaultRoom', 'openSession'])->withCount('students');
 
-        return SectionResource::collection($sections);
+        if ($user->role === 'instructor') {
+            $query->where('instructor_id', $user->id);
+        } elseif ($user->role === 'student') {
+            $query->whereHas('students', function ($students) use ($user) {
+                $students->where('users.id', $user->id);
+            });
+        }
+
+        return $query->orderBy('id')->get();
     }
 
     /**
      * One section.
      */
-    public function show(Section $section): SectionResource
+    public function show(Request $request, Section $section)
     {
-        Gate::authorize('view', $section);
+        $user = $request->user();
 
-        $section->load(['course', 'instructor', 'defaultRoom', 'openSession.room'])->loadCount('students');
+        if (! $section->canManage($user) && ! $section->hasStudent($user)) {
+            abort(403);
+        }
 
-        return new SectionResource($section);
+        return $section->load(['course', 'instructor', 'defaultRoom', 'openSession'])->loadCount('students');
     }
 
     /**
      * Students enrolled in a section.
      */
-    public function students(Section $section): AnonymousResourceCollection
+    public function students(Request $request, Section $section)
     {
-        Gate::authorize('manage', $section);
+        if (! $section->canManage($request->user())) {
+            abort(403);
+        }
 
-        return StudentResource::collection($section->students()->orderBy('university_id')->get());
+        return $section->students()->orderBy('university_id')->get(['users.id', 'university_id', 'name']);
     }
 }

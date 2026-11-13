@@ -2,26 +2,17 @@
 
 namespace App\Http\Middleware;
 
-use App\Enums\UserRole;
 use Closure;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
 
-/**
- * Only lets users with one of the given roles through, e.g. `->middleware('role:instructor,admin')`.
- */
+// Only lets users with one of the given roles through, e.g. ->middleware('role:instructor,admin')
 class EnsureUserHasRole
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  Closure(Request): (Response)  $next
-     */
-    public function handle(Request $request, Closure $next, string ...$roles): Response
+    public function handle(Request $request, Closure $next, string ...$roles)
     {
-        $allowed = array_map(fn (string $role) => UserRole::from($role), $roles);
-
-        abort_unless($request->user()?->hasRole(...$allowed), Response::HTTP_FORBIDDEN);
+        if (! in_array($request->user()?->role, $roles)) {
+            abort(403);
+        }
 
         return $next($request);
     }

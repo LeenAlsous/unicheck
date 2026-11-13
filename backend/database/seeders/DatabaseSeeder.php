@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Enums\UserRole;
 use App\Models\Course;
 use App\Models\Room;
 use App\Models\Section;
@@ -27,11 +26,11 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->user('A0001', 'System Admin', UserRole::Admin);
-        $instructor1 = $this->user('I1001', 'Dr. Instructor One', UserRole::Instructor);
-        $instructor2 = $this->user('I1002', 'Dr. Instructor Two', UserRole::Instructor);
+        $this->user('A0001', 'System Admin', 'admin');
+        $instructor1 = $this->user('I1001', 'Dr. Instructor One', 'instructor');
+        $instructor2 = $this->user('I1002', 'Dr. Instructor Two', 'instructor');
         $students = collect(range(1, 12))
-            ->map(fn (int $i) => $this->user(sprintf('S%04d', $i), "Student {$i}", UserRole::Student));
+            ->map(fn (int $i) => $this->user(sprintf('S%04d', $i), "Student {$i}", 'student'));
 
         // Placeholder coordinates: replace with the real rooms.
         $roomA = Room::create(['building' => 'IT Building', 'name' => '101', 'latitude' => 31.9539, 'longitude' => 35.9106]);
@@ -54,7 +53,7 @@ class DatabaseSeeder extends Seeder
         $sectionB->students()->attach($students->slice(4)->pluck('id'));
     }
 
-    private function user(string $universityId, string $name, UserRole $role): User
+    private function user(string $universityId, string $name, string $role): User
     {
         return User::create([
             'university_id' => $universityId,

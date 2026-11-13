@@ -2,75 +2,78 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Enums\AttendanceSource;
-use App\Enums\AttendanceStatus;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\MarkAttendanceRequest;
-use App\Http\Resources\AttendanceRecordResource;
-use App\Http\Resources\LectureSessionResource;
-use App\Http\Resources\StudentResource;
 use App\Models\AttendanceRecord;
 use App\Models\LectureSession;
 use App\Models\User;
-use Illuminate\Support\Facades\Gate;
+use Illuminate\Http\Request;
 
-/**
- * The live attendance list and manual changes (instructors).
- */
 class AttendanceController extends Controller
 {
     /**
      * Live attendance list.
      *
-     * Every enrolled student with their attendance, or `attendance: null` if they haven't
-     * checked in yet. The instructor app polls this every few seconds while the session is open.
+     * Every student in the section with their attendance, or `attendance: null` if they
+     * haven't checked in yet. The instructor app calls this every few seconds.
      */
-    public function index(LectureSession $session): array
+    public function index(Request $request, LectureSession $session)
     {
-        Gate::authorize('manage', $session->section);
+        if (! $session->section->canManage($request->user())) {
+            abort(403);
+        }
 
         $records = $session->attendanceRecords()->get()->keyBy('student_id');
         $students = $session->section->students()->orderBy('university_id')->get();
-        $counts = $records->countBy(fn (AttendanceRecord $record) => $record->status->value);
+
+        $list = [];
+        foreach ($students as $student) {
+            $list[] = [
+                'student' => $student->only(['id', 'university_id', 'name']),
+                'attendance' => $records->get($student->id),
+            ];
+        }
 
         return [
-            'session' => new LectureSessionResource($session->load('room')),
+            'session' => $session->load('room'),
             'summary' => [
                 'enrolled' => $students->count(),
-                'present' => $counts->get(AttendanceStatus::Present->value, 0),
-                'absent' => $counts->get(AttendanceStatus::Absent->value, 0),
-                'excused' => $counts->get(AttendanceStatus::Excused->value, 0),
+                'present' => $records->where('status', 'present')->count(),
+                'absent' => $records->where('status', 'absent')->count(),
+                'excused' => $records->where('status', 'excused')->count(),
                 'not_checked_in' => $students->count() - $records->count(),
             ],
-            'students' => $students->map(fn (User $student) => [
-                'student' => new StudentResource($student),
-                'attendance' => $records->has($student->id) ? new AttendanceRecordResource($records->get($student->id)) : null,
-            ]),
+            'students' => $list,
         ];
     }
 
     /**
-     * Set one student's attendance.
+     * Set one student's attendance by hand.
      *
-     * For corrections: marking someone present who couldn't scan, absent, or excused with a note.
-     * Works while the session is open and after it is closed.
+     * For example: present when they couldn't scan, or excused with a note.
      */
-    public function update(MarkAttendanceRequest $request, LectureSession $session, User $student): AttendanceRecordResource
+    public function update(Request $request, LectureSession $session, User $student)
     {
-        Gate::authorize('manage', $session->section);
+        if (! $session->section->canManage($request->user())) {
+            abort(403);
+        }
 
-        abort_unless($session->section->students()->whereKey($student->id)->exists(), 404, 'This student is not in this section.');
+        $request->validate([
+            'status' => 'required|in:present,absent,excused',
+            'note' => 'nullable|string|max:500',
+        ]);
 
-        $record = AttendanceRecord::updateOrCreate(
+        if (! $session->section->hasStudent($student)) {
+            abort(404, 'This student is not in this section.');
+        }
+
+        return AttendanceRecord::updateOrCreate(
             ['lecture_session_id' => $session->id, 'student_id' => $student->id],
             [
-                'status' => $request->enum('status', AttendanceStatus::class),
-                'source' => AttendanceSource::Manual,
+                'status' => $request->status,
+                'source' => 'manual',
                 'recorded_at' => now(),
-                'note' => $request->input('note'),
+                'note' => $request->note,
             ],
         );
-
-        return new AttendanceRecordResource($record);
     }
 }

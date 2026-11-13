@@ -2,8 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Enums\AttendanceSource;
-use App\Enums\AttendanceStatus;
 use App\Models\LectureSession;
 use App\Models\Room;
 use App\Models\Section;
@@ -109,8 +107,8 @@ class LectureSessionTest extends TestCase
         $this->section->students()->attach([$present->id, $missing1->id, $missing2->id]);
         $session->attendanceRecords()->create([
             'student_id' => $present->id,
-            'status' => AttendanceStatus::Present,
-            'source' => AttendanceSource::Scan,
+            'status' => 'present',
+            'source' => 'scan',
             'recorded_at' => now(),
         ]);
 
@@ -134,7 +132,7 @@ class LectureSessionTest extends TestCase
         $session = LectureSession::factory()->open()->for($this->section)->create();
         $student = User::factory()->create();
         $this->section->students()->attach($student);
-        $session->close();
+        $this->postJson("/api/sessions/{$session->id}/close")->assertOk();
 
         $this->getJson("/api/sections/{$this->section->id}/sessions")
             ->assertOk()

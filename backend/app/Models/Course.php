@@ -2,37 +2,17 @@
 
 namespace App\Models;
 
-use Database\Factories\CourseFactory;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
-/**
- * A course in the catalog, e.g. CS330 Database Systems.
- */
-#[Fillable(['code', 'name', 'max_absences'])]
+// A course, e.g. CS330 Database Systems.
 class Course extends Model
 {
-    /** @use HasFactory<CourseFactory> */
     use HasFactory;
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
-    protected function casts(): array
-    {
-        return [
-            'max_absences' => 'integer',
-        ];
-    }
+    protected $fillable = ['code', 'name', 'max_absences'];
 
-    /**
-     * @return HasMany<Section, $this>
-     */
-    public function sections(): HasMany
+    public function sections()
     {
         return $this->hasMany(Section::class);
     }

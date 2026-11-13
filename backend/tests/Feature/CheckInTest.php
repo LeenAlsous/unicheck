@@ -2,8 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Enums\AttendanceSource;
-use App\Enums\AttendanceStatus;
 use App\Models\LectureSession;
 use App\Models\User;
 use App\Services\QrCodeService;
@@ -139,8 +137,8 @@ class CheckInTest extends TestCase
             $this->session->section->students()->attach($classmate);
             $this->session->attendanceRecords()->create([
                 'student_id' => $classmate->id,
-                'status' => AttendanceStatus::Present,
-                'source' => AttendanceSource::Scan,
+                'status' => 'present',
+                'source' => 'scan',
                 'recorded_at' => now(),
                 'latitude' => self::ROOM_LAT,
                 'longitude' => self::ROOM_LNG,
@@ -166,8 +164,8 @@ class CheckInTest extends TestCase
     {
         $this->session->attendanceRecords()->create([
             'student_id' => $this->student->id,
-            'status' => AttendanceStatus::Absent,
-            'source' => AttendanceSource::Manual,
+            'status' => 'absent',
+            'source' => 'manual',
             'recorded_at' => now(),
         ]);
 

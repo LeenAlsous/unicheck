@@ -2,8 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Enums\AttendanceSource;
-use App\Enums\AttendanceStatus;
 use App\Models\LectureSession;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -31,8 +29,8 @@ class AttendanceTest extends TestCase
         $this->session->section->students()->attach([$here->id, $notYet->id]);
         $this->session->attendanceRecords()->create([
             'student_id' => $here->id,
-            'status' => AttendanceStatus::Present,
-            'source' => AttendanceSource::Scan,
+            'status' => 'present',
+            'source' => 'scan',
             'recorded_at' => now(),
         ]);
 

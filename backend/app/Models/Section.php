@@ -2,76 +2,55 @@
 
 namespace App\Models;
 
-use App\Enums\SessionStatus;
-use Database\Factories\SectionFactory;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 
-/**
- * One class group of a course in a semester, taught by one instructor.
- */
-#[Fillable(['course_id', 'number', 'semester', 'instructor_id', 'default_room_id'])]
+// One class group of a course in a semester, taught by one instructor.
 class Section extends Model
 {
-    /** @use HasFactory<SectionFactory> */
     use HasFactory;
 
-    /**
-     * @return BelongsTo<Course, $this>
-     */
-    public function course(): BelongsTo
+    protected $fillable = ['course_id', 'number', 'semester', 'instructor_id', 'default_room_id'];
+
+    public function course()
     {
         return $this->belongsTo(Course::class);
     }
 
-    /**
-     * @return BelongsTo<User, $this>
-     */
-    public function instructor(): BelongsTo
+    public function instructor()
     {
         return $this->belongsTo(User::class, 'instructor_id');
     }
 
-    /**
-     * @return BelongsTo<Room, $this>
-     */
-    public function defaultRoom(): BelongsTo
+    public function defaultRoom()
     {
         return $this->belongsTo(Room::class, 'default_room_id');
     }
 
-    /**
-     * @return BelongsToMany<User, $this>
-     */
-    public function students(): BelongsToMany
+    public function students()
     {
         return $this->belongsToMany(User::class, 'enrollments', 'section_id', 'student_id')->withTimestamps();
     }
 
-    /**
-     * @return HasMany<LectureSession, $this>
-     */
-    public function lectureSessions(): HasMany
+    public function lectureSessions()
     {
         return $this->hasMany(LectureSession::class);
     }
 
-    /**
-     * The session that is open right now, if any. A section has at most one.
-     *
-     * @return HasOne<LectureSession, $this>
-     */
-    public function openSession(): HasOne
+    // The lecture running right now, if any. A section has at most one.
+    public function openSession()
     {
-        return $this->hasOne(LectureSession::class)->ofMany(
-            ['id' => 'max'],
-            fn (Builder $query) => $query->where('status', SessionStatus::Open),
-        );
+        return $this->hasOne(LectureSession::class)->where('status', 'open');
+    }
+
+    // The section's instructor and admins can start lectures and change attendance.
+    public function canManage(User $user): bool
+    {
+        return $user->role === 'admin' || $this->instructor_id == $user->id;
+    }
+
+    public function hasStudent(User $user): bool
+    {
+        return $this->students()->where('users.id', $user->id)->exists();
     }
 }

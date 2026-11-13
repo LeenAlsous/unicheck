@@ -3,20 +3,15 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Http\Resources\RoomResource;
 use App\Models\Room;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
-/**
- * Lecture rooms, for picking where a session takes place.
- */
 class RoomController extends Controller
 {
     /**
-     * All rooms.
+     * All rooms, to choose where a lecture takes place.
      */
-    public function index(): AnonymousResourceCollection
+    public function index()
     {
-        return RoomResource::collection(Room::orderBy('building')->orderBy('name')->get());
+        return Room::orderBy('building')->orderBy('name')->get();
     }
 }
