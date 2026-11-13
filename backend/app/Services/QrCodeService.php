@@ -3,87 +3,69 @@
 namespace App\Services;
 
 use App\Models\LectureSession;
-use Carbon\CarbonInterface;
 
 /**
  * Rotating QR codes for a lecture session.
  *
- * The instructor app makes the codes itself from the session's `qr_secret`, the same way an
- * authenticator app makes its 6-digit codes, so the server only has to check them:
+ * The code changes every `qr_step_seconds` (10 by default). The instructor app makes the codes
+ * itself with the same recipe, so the server only has to check them:
  *
- *     step      = floor(unix_seconds / qr_step_seconds)
- *     signature = base64url(HMAC-SHA256(key: qr_secret, message: "{session_id}.{step}")),
- *                 without "=" padding, first 22 characters
- *     code      = "UC1.{session_id}.{step}.{signature}"
+ *     step = floor(unix_seconds / qr_step_seconds)
+ *     hash = first 8 characters of sha256(qr_secret + step), in hex
+ *     code = "{session_id}-{step}-{hash}"          e.g. "42-179421840-1f0c2a9b"
  *
- * A code is accepted during its own step and the next one, so a screenshot sent to a friend
+ * A code works during its own step and the next one, so a screenshot sent to a friend
  * stops working after 10–20 seconds.
  */
-final class QrCodeService
+class QrCodeService
 {
-    /** Marks a QR code as a UniCheck attendance code (version 1 of the format). */
-    public const PREFIX = 'UC1';
-
-    private const SIGNATURE_LENGTH = 22;
-
     /**
-     * The step number at the given time (now by default).
+     * Which 10-second window we are in right now. Goes up by 1 every step.
      */
-    public function currentStep(LectureSession $session, ?CarbonInterface $at = null): int
+    public function currentStep(LectureSession $session): int
     {
-        return intdiv(($at ?? now())->getTimestamp(), $session->qr_step_seconds);
+        return intdiv(now()->timestamp, $session->qr_step_seconds);
     }
 
     /**
-     * The code for one step. The server uses it in tests and to check scanned codes.
+     * The QR code for one step.
      */
     public function codeFor(LectureSession $session, int $step): string
     {
-        return implode('.', [self::PREFIX, $session->id, $step, $this->signature($session, $step)]);
+        $hash = substr(hash('sha256', $session->qr_secret.$step), 0, 8);
+
+        return $session->id.'-'.$step.'-'.$hash;
     }
 
     /**
-     * The session ID inside a scanned code, or null if it isn't a UniCheck code.
+     * The session ID at the start of a scanned code, or null if it isn't one of our codes.
      */
     public function sessionIdFrom(string $code): ?int
     {
-        $parts = explode('.', $code);
+        $parts = explode('-', $code);
 
-        if (count($parts) !== 4 || $parts[0] !== self::PREFIX || ! ctype_digit($parts[1])) {
+        if (count($parts) !== 3 || ! ctype_digit($parts[0])) {
             return null;
         }
 
-        return (int) $parts[1];
+        return (int) $parts[0];
     }
 
     /**
-     * How old a scanned code is: 0 for the current step, 1 for the previous one.
-     *
-     * Null when the code is older than that, from the future, for another session or forged.
+     * 0 if the code is from the current step, 1 if from the step before, null if it's wrong or too old.
      */
     public function age(LectureSession $session, string $code): ?int
     {
-        $parts = explode('.', $code);
+        $nowStep = $this->currentStep($session);
 
-        if (count($parts) !== 4 || ! ctype_digit($parts[2])) {
-            return null;
+        if ($code === $this->codeFor($session, $nowStep)) {
+            return 0;
         }
 
-        $step = (int) $parts[2];
-        $age = $this->currentStep($session) - $step;
-
-        if ($age < 0 || $age > 1) {
-            return null;
+        if ($code === $this->codeFor($session, $nowStep - 1)) {
+            return 1;
         }
 
-        return hash_equals($this->codeFor($session, $step), $code) ? $age : null;
-    }
-
-    private function signature(LectureSession $session, int $step): string
-    {
-        $mac = hash_hmac('sha256', "{$session->id}.{$step}", $session->qr_secret, true);
-        $base64Url = rtrim(strtr(base64_encode($mac), '+/', '-_'), '=');
-
-        return substr($base64Url, 0, self::SIGNATURE_LENGTH);
+        return null;
     }
 }

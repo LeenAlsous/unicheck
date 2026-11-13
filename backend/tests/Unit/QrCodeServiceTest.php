@@ -32,7 +32,7 @@ class QrCodeServiceTest extends TestCase
     public function test_matches_the_reference_code(): void
     {
         $this->assertSame(179421840, $this->qrCodes->currentStep($this->session));
-        $this->assertSame('UC1.42.179421840.ToPFKhS-UKQI7KY--PVGfT', $this->qrCodes->codeFor($this->session, 179421840));
+        $this->assertSame('42-179421840-7c8a89cf', $this->qrCodes->codeFor($this->session, 179421840));
     }
 
     public function test_current_and_previous_codes_are_accepted(): void
@@ -51,14 +51,14 @@ class QrCodeServiceTest extends TestCase
     public function test_codes_from_the_future_or_with_a_wrong_signature_are_rejected(): void
     {
         $this->assertNull($this->qrCodes->age($this->session, $this->qrCodes->codeFor($this->session, 179421841)));
-        $this->assertNull($this->qrCodes->age($this->session, 'UC1.42.179421840.AAAAAAAAAAAAAAAAAAAAAA'));
+        $this->assertNull($this->qrCodes->age($this->session, '42-179421840-aaaaaaaa'));
         $this->assertNull($this->qrCodes->age($this->session, 'not a code'));
     }
 
     public function test_reads_the_session_id(): void
     {
-        $this->assertSame(42, $this->qrCodes->sessionIdFrom('UC1.42.179421840.ToPFKhS-UKQI7KY--PVGfT'));
+        $this->assertSame(42, $this->qrCodes->sessionIdFrom('42-179421840-7c8a89cf'));
         $this->assertNull($this->qrCodes->sessionIdFrom('https://example.com'));
-        $this->assertNull($this->qrCodes->sessionIdFrom('UC1.abc.1.x'));
+        $this->assertNull($this->qrCodes->sessionIdFrom('abc-1-x'));
     }
 }

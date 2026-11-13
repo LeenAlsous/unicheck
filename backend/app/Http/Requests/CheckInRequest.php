@@ -17,7 +17,7 @@ class CheckInRequest extends FormRequest
     public function rules(): array
     {
         return [
-            /** The text inside the scanned QR code. @example UC1.42.179421840.ToPFKhS-UKQI7KY--PVGfT */
+            /** The text inside the scanned QR code. @example 42-179421840-7c8a89cf */
             'code' => ['required', 'string', 'max:200'],
             /** @example 31.9539 */
             'latitude' => ['required', 'numeric', 'between:-90,90'],

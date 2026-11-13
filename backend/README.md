@@ -147,17 +147,17 @@ screen keeps working without calling the server every 10 seconds. With `qr_secre
 `qr_step_seconds` and `server_time_ms` from the session response:
 
 ```
-step      = floor(server_now_seconds / qr_step_seconds)
-signature = base64url(HMAC-SHA256(key: qr_secret as UTF-8, message: "{session_id}.{step}"))
-            without "=" padding, first 22 characters
-QR text   = "UC1.{session_id}.{step}.{signature}"
+step    = floor(server_now_seconds / qr_step_seconds)
+hash    = first 8 characters of sha256(qr_secret + step), in lowercase hex
+          (qr_secret and step joined as text, e.g. "test-secret179421840")
+QR text = "{session_id}-{step}-{hash}"
 ```
 
 `server_now` is the phone's clock corrected by the difference to `server_time_ms`, so a
 phone with the wrong time still shows valid codes. Draw a new QR whenever `step` changes.
 
 Check your Flutter code against this example: session `42`, secret `test-secret`, 10-second
-steps, at 2026-11-09 10:00:00 UTC → `UC1.42.179421840.ToPFKhS-UKQI7KY--PVGfT`
+steps, at 2026-11-09 10:00:00 UTC → `42-179421840-7c8a89cf`
 (the same example is in `tests/Unit/QrCodeServiceTest.php`).
 
 ## Check-in rules
