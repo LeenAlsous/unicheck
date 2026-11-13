@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../api.dart';
 import '../models.dart';
 import 'login_screen.dart';
+import 'scan_screen.dart';
 
 /// The student's courses. Shows "Check-in open" when a lecture is running.
 class StudentHomeScreen extends StatefulWidget {
@@ -43,6 +44,14 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     }
   }
 
+  Future<void> openScanner() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const ScanScreen()),
+    );
+    loadSections();
+  }
+
   Future<void> logout() async {
     await Api.logout();
     if (!mounted) return;
@@ -66,6 +75,11 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
         ],
       ),
       body: buildBody(),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: openScanner,
+        icon: const Icon(Icons.qr_code_scanner),
+        label: const Text('Scan QR code'),
+      ),
     );
   }
 
@@ -91,7 +105,12 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     return RefreshIndicator(
       onRefresh: loadSections,
       child: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(
+          16,
+          16,
+          16,
+          88,
+        ), // room for the Scan button
         children: [
           Text('Hi, ${widget.user.name}'),
           const SizedBox(height: 12),

@@ -142,6 +142,26 @@ class Api {
     return data.map((json) => Section.fromJson(json)).toList();
   }
 
+  // ---------- Students ----------
+
+  /// Sends the scanned QR code with the phone's location.
+  /// If it's refused, the ApiException message says why (expired code, not in the room...).
+  static Future<void> checkIn({
+    required String code,
+    required double latitude,
+    required double longitude,
+    required double accuracy,
+    required bool isMocked,
+  }) async {
+    await _post('/check-ins', {
+      'code': code,
+      'latitude': latitude,
+      'longitude': longitude,
+      'accuracy_meters': accuracy,
+      'is_mocked': isMocked,
+    });
+  }
+
   // ---------- Instructors ----------
 
   /// Starts a lecture (check-in opens for 15 minutes). Returns the lecture's ID.

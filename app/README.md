@@ -18,6 +18,14 @@ seconds; flagged check-ins say what to check, e.g. "weak GPS"). Tap a student to
 present / absent / excused, and tap **End lecture** to mark everyone else absent. On a wide
 screen (the projector) the QR and the list are side by side.
 
+**Students:** tap **Scan QR code** on "My courses". The app first gets the phone's location
+(it asks for permission), then scans the QR on the lecture screen and checks in right away.
+If the server refuses, the student sees why (expired code, not in the room, fake location
+app...) and can scan again.
+
+To try scanning you need a **real phone** (simulators have no camera). The phone must be on
+the same Wi-Fi as the computer running the backend; see the `--dart-define` command above.
+
 ## Run it
 
 1. Start the backend first (see [`../backend/README.md`](../backend/README.md)):
@@ -60,7 +68,8 @@ lib/
 └── screens/
     ├── start_screen.dart             ← checks if the user is already logged in
     ├── login_screen.dart
-    ├── student_home_screen.dart      ← "My courses"
+    ├── student_home_screen.dart      ← "My courses" + Scan QR code button
+    ├── scan_screen.dart              ← camera scanner + location, sends the check-in
     ├── instructor_home_screen.dart   ← "My sections", tap one to start a lecture
     └── lecture_screen.dart           ← QR code + live attendance list
 ```

@@ -6,6 +6,10 @@
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>NSCameraUsageDescription</key>
+	<string>UniCheck uses the camera to scan the attendance QR code.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>UniCheck checks that you are in the lecture room when you check in.</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>UniCheck connects to the attendance server on your local network during development.</string>
 	<key>CFBundleDisplayName</key>

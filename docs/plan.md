@@ -43,7 +43,7 @@ lecture_sessions · attendance_records · devices
 | Sun Nov 8 | ✅ Laravel skeleton: tables, seed data, token login with roles, API docs, tests. Next: courses, sessions, QR validation, check-in endpoint |
 | Mon Nov 9 | ✅ Backend: sections, start/close lectures, QR check, check-in rules, live list, manual marking. Flutter app skeleton (login, role-based home) ✅ done Fri Nov 13 |
 | Tue Nov 10 | ✅ (done Fri Nov 13) Instructor screens: courses, start lecture → rotating QR, live attendance, manual marking, end lecture |
-| Wed Nov 11 | Student screens: device key registration, course list, scanner → check-in |
+| Wed Nov 11 | ✅ (done Fri Nov 13) Student screens: course list, scanner → check-in with location and fake-location check. Not done: device key registration |
 | Thu Nov 12 | Location + mock detection, history; first real classroom test |
 | Fri Nov 13 | Absence-limit alerts (FCM), PDF / Excel reports |
 | Sat Nov 14 | Bug fixing, full end-to-end demo |
