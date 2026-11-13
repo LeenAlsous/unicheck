@@ -10,7 +10,7 @@ One Flutter app for both roles; the screens shown depend on who logs in.
 
 **Done so far:** login with university ID, staying logged in after restarting, log out, and the
 home screen for each role (student: "My courses" with a *Check-in open* label; instructor:
-"My sections" with student count and room).
+"My sections" with student count, room and a *Lecture running* label).
 
 ## Run it
 
@@ -41,37 +41,30 @@ flutter run --dart-define=API_BASE_URL=http://192.168.1.20:8000/api
 Log in with a seeded account from the backend README, e.g. `S0001` (student) or `I1001`
 (instructor).
 
-## Layout
+## Code layout
+
+Kept simple on purpose: screens use `setState`, and all server calls are in one file.
 
 ```
 lib/
-├── main.dart                 ← creates the API client and repositories, starts the app
-├── app.dart                  ← theme; AuthGate picks login / student home / instructor home
-├── core/
-│   ├── config.dart           ← backend URL
-│   ├── api/                  ← ApiClient (Dio + login token), ApiException (readable errors)
-│   └── storage/              ← TokenStorage (secure storage)
-└── features/
-    ├── auth/                 ← login screen, AuthCubit (who is logged in), LoginCubit
-    ├── sections/             ← Section model, repository, cubit, list widgets
-    └── home/                 ← StudentHomeScreen, InstructorHomeScreen
+├── main.dart                         ← starts the app
+├── api.dart                          ← every call to the backend (login, sections, ...)
+├── models.dart                       ← User, Section (JSON → Dart)
+└── screens/
+    ├── start_screen.dart             ← checks if the user is already logged in
+    ├── login_screen.dart
+    ├── student_home_screen.dart      ← "My courses"
+    └── instructor_home_screen.dart   ← "My sections"
 ```
 
-Each feature has `models/` (JSON → Dart), `data/` (API calls), `cubit/` (state) and
-`screens/` or `widgets/` (UI). State lives in cubits (`flutter_bloc`); screens only read it.
-
-How errors work: when the backend refuses something it sends a message meant for the user
-(for example "This QR code has expired."). `ApiClient` turns it into an `ApiException`
-whose `message` the screen shows as-is, so error texts are written once, in the backend.
-If the login token stops working, the app goes back to the login screen by itself.
+To add a server call: add a method to `Api` in `api.dart`, then call it from a screen inside
+`try { ... } on ApiException catch (e) { ... }`. When the backend refuses something, it
+sends a message meant for the user (for example "This QR code has expired."), and
+`e.message` is that text, so the screen can just show it.
 
 ## Tests and checks
 
 ```bash
 flutter test
 flutter analyze
-dart format lib test        # line length 120, set in analysis_options.yaml
 ```
-
-Tests mock the repositories with `mocktail`; the JSON in `test/helpers/fixtures.dart` is
-copied from real backend responses.

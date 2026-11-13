@@ -1,30 +1,27 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'app.dart';
-import 'core/api/api_client.dart';
-import 'core/config.dart';
-import 'core/storage/token_storage.dart';
-import 'features/auth/cubit/auth_cubit.dart';
-import 'features/auth/data/auth_repository.dart';
-import 'features/sections/data/sections_repository.dart';
+import 'screens/start_screen.dart';
 
 void main() {
-  WidgetsFlutterBinding.ensureInitialized();
+  runApp(const UniCheckApp());
+}
 
-  final tokens = TokenStorage();
-  final api = ApiClient(baseUrl: AppConfig.apiBaseUrl, tokens: tokens);
-  final authRepository = AuthRepository(api: api, tokens: tokens);
-  final authCubit = AuthCubit(authRepository)..restoreSession();
-  api.onUnauthorized = authCubit.sessionExpired;
+class UniCheckApp extends StatelessWidget {
+  const UniCheckApp({super.key});
 
-  runApp(
-    MultiRepositoryProvider(
-      providers: [
-        RepositoryProvider.value(value: authRepository),
-        RepositoryProvider(create: (_) => SectionsRepository(api)),
-      ],
-      child: BlocProvider.value(value: authCubit, child: const UniCheckApp()),
-    ),
-  );
+  @override
+  Widget build(BuildContext context) {
+    const brandColor = Color(0xFF1E5AA8);
+
+    return MaterialApp(
+      title: 'UniCheck',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(colorSchemeSeed: brandColor),
+      darkTheme: ThemeData(
+        colorSchemeSeed: brandColor,
+        brightness: Brightness.dark,
+      ),
+      home: const StartScreen(),
+    );
+  }
 }
