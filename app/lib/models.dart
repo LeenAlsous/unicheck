@@ -3,12 +3,15 @@ class User {
   final String universityId; // e.g. S0001 or I1001
   final String name;
   final String role; // "student", "instructor" or "admin"
+  final bool
+  mustChangePassword; // true for new accounts, until they choose a password
 
   User({
     required this.id,
     required this.universityId,
     required this.name,
     required this.role,
+    required this.mustChangePassword,
   });
 
   bool get isStudent => role == 'student';
@@ -19,6 +22,7 @@ class User {
       universityId: json['university_id'],
       name: json['name'],
       role: json['role'],
+      mustChangePassword: json['must_change_password'] == true,
     );
   }
 }
@@ -205,6 +209,47 @@ class Phone {
           ? null
           : DateTime.parse(json['last_used_at']),
       isThisPhone: json['is_this_phone'] == true,
+    );
+  }
+}
+
+/// A student in a class list.
+class Student {
+  final int id;
+  final String universityId;
+  final String name;
+
+  Student({required this.id, required this.universityId, required this.name});
+
+  factory Student.fromJson(Map<String, dynamic> json) {
+    return Student(
+      id: json['id'],
+      universityId: json['university_id'],
+      name: json['name'],
+    );
+  }
+}
+
+/// What happened when an instructor imported an Excel file of students.
+class ImportResult {
+  final int added;
+  final int alreadyInClass;
+  final int newAccounts;
+  final List<String> problems; // e.g. "Row 7: no university ID."
+
+  ImportResult({
+    required this.added,
+    required this.alreadyInClass,
+    required this.newAccounts,
+    required this.problems,
+  });
+
+  factory ImportResult.fromJson(Map<String, dynamic> json) {
+    return ImportResult(
+      added: json['added'],
+      alreadyInClass: json['already_in_class'],
+      newAccounts: json['new_accounts'],
+      problems: List<String>.from(json['problems']),
     );
   }
 }

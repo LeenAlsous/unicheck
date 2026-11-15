@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Section;
+use App\Models\User;
+use App\Services\SpreadsheetReader;
 use Illuminate\Http\Request;
 
 class SectionController extends Controller
@@ -55,5 +57,78 @@ class SectionController extends Controller
         }
 
         return $section->students()->orderBy('university_id')->get(['users.id', 'university_id', 'name']);
+    }
+
+    /**
+     * Add students to a section from an Excel or CSV file.
+     *
+     * The first row must have the headings `University ID` and `Name`. Students who don't have
+     * an account yet get one; their first password is their university ID, and the app asks
+     * them to change it. Returns how many were added and the rows that were skipped, and why.
+     */
+    public function importStudents(Request $request, Section $section)
+    {
+        if (! $section->canManage($request->user())) {
+            abort(403);
+        }
+
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls,csv,txt|max:2048',
+        ]);
+
+        $file = $request->file('file');
+        $sheet = SpreadsheetReader::read($file->getRealPath(), $file->getClientOriginalExtension());
+
+        if (! in_array('university id', $sheet['headings']) || ! in_array('name', $sheet['headings'])) {
+            abort(422, 'The first row of the file must have the headings "University ID" and "Name".');
+        }
+
+        $added = 0;
+        $alreadyInClass = 0;
+        $newAccounts = 0;
+        $problems = [];
+
+        foreach ($sheet['rows'] as $rowNumber => $row) {
+            $universityId = $row['university id'];
+            $name = $row['name'];
+
+            if ($universityId === '') {
+                $problems[] = "Row $rowNumber: no university ID.";
+
+                continue;
+            }
+
+            $student = User::where('university_id', $universityId)->first();
+
+            if ($student && $student->role !== 'student') {
+                $problems[] = "Row $rowNumber: $universityId is not a student account.";
+
+                continue;
+            }
+
+            if (! $student) {
+                if ($name === '') {
+                    $problems[] = "Row $rowNumber: $universityId has no account yet, so a name is needed.";
+
+                    continue;
+                }
+                $student = User::newAccount($universityId, $name, 'student');
+                $newAccounts++;
+            }
+
+            if ($section->hasStudent($student)) {
+                $alreadyInClass++;
+            } else {
+                $section->students()->attach($student->id);
+                $added++;
+            }
+        }
+
+        return [
+            'added' => $added,
+            'already_in_class' => $alreadyInClass,
+            'new_accounts' => $newAccounts,
+            'problems' => $problems,
+        ];
     }
 }

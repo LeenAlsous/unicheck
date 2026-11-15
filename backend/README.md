@@ -94,6 +94,29 @@ Start over with a clean database and fresh fake data:
 php artisan migrate:fresh --seed
 ```
 
+## Creating accounts
+
+There is no sign-up screen: accounts come from the university's lists. Every imported
+account's **first password is its university ID**, and the app asks the user to choose a new
+one the first time they log in (`must_change_password`). Example files are in
+[`docs/import-examples`](../docs/import-examples); open them in Excel or save your own sheet
+as `.xlsx` or `.csv`. The headings in the first row matter, not the column order.
+
+**Instructors** add students to their own section in the app: section card → students icon →
+**Import from Excel**. File headings: `University ID`, `Name`. Students without an account
+get one. The app shows how many were added and which rows were skipped and why.
+
+**Admins** load a whole semester from the terminal:
+
+```bash
+php artisan import:users users.xlsx               # University ID, Name, Role (student / instructor / admin)
+php artisan import:enrollments enrollments.xlsx   # University ID, Course code, Section, Semester
+```
+
+`import:enrollments` also creates a course and section that don't exist yet if the row has
+`Course name` and `Instructor ID`. Running an import twice is safe: existing accounts and
+enrollments are skipped.
+
 ## Authentication
 
 Laravel Sanctum bearer tokens. The app sends `POST /api/auth/login` with
@@ -137,6 +160,7 @@ All paths start with `/api`. The API docs page shows the full request and respon
 | `POST` | `/auth/login` | – | Log in, returns a bearer token and the user |
 | `GET` | `/auth/me` | Anyone | Current user |
 | `POST` | `/auth/logout` | Anyone | Revoke the current token |
+| `POST` | `/auth/password` | Anyone | Change password (`current_password`, `new_password`, `new_password_confirmation`) |
 | `GET` | `/sections` | Anyone | Home screen: sections I teach / I'm enrolled in (admins: all), with `open_session` while check-in runs |
 | `GET` | `/sections/{section}` | Anyone in the section | One section |
 | `POST` | `/check-ins` | Student | Check in with the scanned QR text and the phone's location |
@@ -144,6 +168,7 @@ All paths start with `/api`. The API docs page shows the full request and respon
 | `DELETE` | `/devices/{device}` | Student | Remove a lost or sold phone (logs it out) |
 | `GET` | `/rooms` | Instructor | Rooms to choose from |
 | `GET` | `/sections/{section}/students` | Instructor | Class list |
+| `POST` | `/sections/{section}/students/import` | Instructor | Add students from an Excel/CSV `file` (headings `University ID`, `Name`) |
 | `GET` | `/sections/{section}/sessions` | Instructor | Past and current lectures with present/absent counts |
 | `POST` | `/sections/{section}/sessions` | Instructor | Start a lecture: opens check-in (15 min by default) and returns `qr_secret` |
 | `GET` | `/sessions/{session}` | Instructor | A lecture with its `qr_secret`, to show the QR again (e.g. on the lecture-room PC) |

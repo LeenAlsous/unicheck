@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../api.dart';
 import '../models.dart';
+import 'change_password_screen.dart';
 import 'login_screen.dart';
 import 'my_phones_screen.dart';
 import 'scan_screen.dart';
@@ -75,6 +76,16 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
             ),
             icon: const Icon(Icons.smartphone),
             tooltip: 'My phones',
+          ),
+          IconButton(
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ChangePasswordScreen(user: widget.user),
+              ),
+            ),
+            icon: const Icon(Icons.lock_outline),
+            tooltip: 'Change password',
           ),
           IconButton(
             onPressed: logout,

@@ -21,6 +21,9 @@ return new class extends Migration
             $table->string('password');
             $table->string('role', 20)->index();
             $table->boolean('is_active')->default(true);
+            // True for imported accounts: their first password is their university ID,
+            // so the app asks them to choose a new one when they log in.
+            $table->boolean('must_change_password')->default(false);
             $table->rememberToken();
             $table->timestamps();
         });

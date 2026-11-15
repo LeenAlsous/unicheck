@@ -11,7 +11,7 @@ class User extends Authenticatable
 {
     use HasApiTokens, HasFactory;
 
-    protected $fillable = ['university_id', 'name', 'email', 'password', 'role', 'is_active'];
+    protected $fillable = ['university_id', 'name', 'email', 'password', 'role', 'is_active', 'must_change_password'];
 
     protected $hidden = ['password', 'remember_token'];
 
@@ -19,7 +19,21 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
         'is_active' => 'boolean',
+        'must_change_password' => 'boolean',
     ];
+
+    // Creates an imported account. The first password is the university ID, and the
+    // app makes the user choose a new one the first time they log in.
+    public static function newAccount(string $universityId, string $name, string $role): User
+    {
+        return User::create([
+            'university_id' => $universityId,
+            'name' => $name,
+            'password' => $universityId,
+            'role' => $role,
+            'must_change_password' => true,
+        ]);
+    }
 
     // Sections this user teaches (instructors).
     public function taughtSections()

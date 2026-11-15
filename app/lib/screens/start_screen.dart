@@ -2,15 +2,22 @@ import 'package:flutter/material.dart';
 
 import '../api.dart';
 import '../models.dart';
+import 'change_password_screen.dart';
 import 'instructor_home_screen.dart';
 import 'login_screen.dart';
 import 'student_home_screen.dart';
 
 /// Opens the right home screen for the user's role.
+/// New accounts must choose their own password first.
 void openHomeScreen(BuildContext context, User user) {
-  final home = user.isStudent
-      ? StudentHomeScreen(user: user)
-      : InstructorHomeScreen(user: user);
+  Widget home;
+  if (user.mustChangePassword) {
+    home = ChangePasswordScreen(user: user, mustChange: true);
+  } else if (user.isStudent) {
+    home = StudentHomeScreen(user: user);
+  } else {
+    home = InstructorHomeScreen(user: user);
+  }
 
   Navigator.pushReplacement(
     context,

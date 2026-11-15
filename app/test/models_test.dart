@@ -121,4 +121,28 @@ void main() {
     expect(phone.addedAt, DateTime.utc(2026, 11, 1, 9));
     expect(phone.isThisPhone, true);
   });
+
+  test('reads must_change_password', () {
+    final user = User.fromJson({
+      'id': 9,
+      'university_id': 'S0100',
+      'name': 'New Student',
+      'role': 'student',
+      'must_change_password': true,
+    });
+
+    expect(user.mustChangePassword, true);
+  });
+
+  test('reads an import result', () {
+    final result = ImportResult.fromJson({
+      'added': 3,
+      'already_in_class': 1,
+      'new_accounts': 2,
+      'problems': ['Row 4: no university ID.'],
+    });
+
+    expect(result.added, 3);
+    expect(result.problems, ['Row 4: no university ID.']);
+  });
 }

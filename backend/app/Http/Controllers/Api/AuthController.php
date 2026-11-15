@@ -88,6 +88,36 @@ class AuthController extends Controller
     }
 
     /**
+     * Change my password.
+     *
+     * Imported accounts start with their university ID as the password and have
+     * `must_change_password: true`; the app sends them here first.
+     */
+    public function changePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => 'required|string',
+            'new_password' => 'required|string|min:8|confirmed', // also needs new_password_confirmation
+        ]);
+
+        $user = $request->user();
+
+        if (! Hash::check($request->current_password, $user->password)) {
+            throw ValidationException::withMessages(['current_password' => 'Your current password is wrong.']);
+        }
+        if ($request->new_password === $user->university_id) {
+            throw ValidationException::withMessages(['new_password' => "Your new password can't be your university ID."]);
+        }
+
+        $user->update([
+            'password' => $request->new_password,
+            'must_change_password' => false,
+        ]);
+
+        return $user;
+    }
+
+    /**
      * Log out (the token stops working).
      */
     public function logout(Request $request)

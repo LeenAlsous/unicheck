@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import '../api.dart';
 import '../models.dart';
 import 'lecture_screen.dart';
+import 'change_password_screen.dart';
 import 'login_screen.dart';
+import 'students_screen.dart';
 
 /// The sections an instructor teaches (admins see all sections).
 class InstructorHomeScreen extends StatefulWidget {
@@ -109,6 +111,16 @@ class _InstructorHomeScreenState extends State<InstructorHomeScreen> {
         title: const Text('My sections'),
         actions: [
           IconButton(
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ChangePasswordScreen(user: widget.user),
+              ),
+            ),
+            icon: const Icon(Icons.lock_outline),
+            tooltip: 'Change password',
+          ),
+          IconButton(
             onPressed: logout,
             icon: const Icon(Icons.logout),
             tooltip: 'Log out',
@@ -149,6 +161,16 @@ class _InstructorHomeScreenState extends State<InstructorHomeScreen> {
           for (final section in sections)
             Card(
               child: ListTile(
+                leading: IconButton(
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => StudentsScreen(section: section),
+                    ),
+                  ),
+                  icon: const Icon(Icons.groups_outlined),
+                  tooltip: 'Students',
+                ),
                 title: Text(
                   '${section.courseCode} - ${section.courseName} (section ${section.number})',
                 ),

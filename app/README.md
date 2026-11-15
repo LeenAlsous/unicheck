@@ -18,6 +18,11 @@ seconds; flagged check-ins say what to check, e.g. "weak GPS"). Tap a student to
 present / absent / excused, and tap **End lecture** to mark everyone else absent. On a wide
 screen (the projector) the QR and the list are side by side.
 
+**Accounts:** instructors add students to a section from an Excel file (section card →
+students icon → **Import from Excel**, headings `University ID` and `Name`). New accounts'
+first password is their university ID; the app makes them choose a new one at first login.
+Anyone can change their password with the lock icon on the home screen.
+
 **Phones:** a student can log in on several phones (lost or new phone), but each phone works
 for one student only, so you can't log in to a friend's account on your phone. Students see
 their phones under **My phones** (the phone icon on "My courses") and can remove a lost or
@@ -76,6 +81,8 @@ lib/
     ├── student_home_screen.dart      ← "My courses" + Scan QR code button
     ├── scan_screen.dart              ← camera scanner + location, sends the check-in
     ├── my_phones_screen.dart         ← the student's phones, remove a lost one
+    ├── students_screen.dart          ← a section's students + Import from Excel
+    ├── change_password_screen.dart   ← change password (required after the first login)
     ├── instructor_home_screen.dart   ← "My sections", tap one to start a lecture
     └── lecture_screen.dart           ← QR code + live attendance list
 ```

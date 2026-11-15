@@ -147,6 +147,19 @@ class Api {
     }
   }
 
+  /// Changes the user's password. Returns the updated user.
+  static Future<User> changePassword(
+    String currentPassword,
+    String newPassword,
+  ) async {
+    final data = await _post('/auth/password', {
+      'current_password': currentPassword,
+      'new_password': newPassword,
+      'new_password_confirmation': newPassword,
+    });
+    return User.fromJson(data);
+  }
+
   static Future<void> logout() async {
     try {
       await _post('/auth/logout');
@@ -196,6 +209,35 @@ class Api {
   }
 
   // ---------- Instructors ----------
+
+  /// The students in a section.
+  static Future<List<Student>> getStudents(int sectionId) async {
+    final List data = await _get('/sections/$sectionId/students');
+    return data.map((json) => Student.fromJson(json)).toList();
+  }
+
+  /// Uploads an Excel or CSV file of students (columns "University ID" and "Name")
+  /// and adds them to the section.
+  static Future<ImportResult> importStudents(
+    int sectionId,
+    List<int> fileBytes,
+    String fileName,
+  ) async {
+    final request = http.MultipartRequest(
+      'POST',
+      Uri.parse('$baseUrl/sections/$sectionId/students/import'),
+    );
+    request.headers.addAll(_headers);
+    request.headers.remove(
+      'Content-Type',
+    ); // the request sets its own for file uploads
+    request.files.add(
+      http.MultipartFile.fromBytes('file', fileBytes, filename: fileName),
+    );
+
+    final data = await _send(request.send().then(http.Response.fromStream));
+    return ImportResult.fromJson(data);
+  }
 
   /// Starts a lecture (check-in opens for 15 minutes). Returns the lecture's ID.
   static Future<int> startLecture(int sectionId) async {

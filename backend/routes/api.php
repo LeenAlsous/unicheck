@@ -14,6 +14,7 @@ Route::post('/auth/login', [AuthController::class, 'login'])->middleware('thrott
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/auth/me', [AuthController::class, 'me']);
     Route::post('/auth/logout', [AuthController::class, 'logout']);
+    Route::post('/auth/password', [AuthController::class, 'changePassword']);
 
     // Both roles: each sees only their own sections.
     Route::get('/sections', [SectionController::class, 'index']);
@@ -26,6 +27,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('role:instructor,admin')->group(function () {
         Route::get('/rooms', [RoomController::class, 'index']);
         Route::get('/sections/{section}/students', [SectionController::class, 'students']);
+        Route::post('/sections/{section}/students/import', [SectionController::class, 'importStudents']);
         Route::get('/sections/{section}/sessions', [LectureSessionController::class, 'index']);
         Route::post('/sections/{section}/sessions', [LectureSessionController::class, 'store']);
         Route::get('/sessions/{session}', [LectureSessionController::class, 'show']);
