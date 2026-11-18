@@ -60,7 +60,7 @@ class _SectionLocationScreenState extends State<SectionLocationScreen> {
     setState(() {
       locating = false;
       if (position == null) {
-        error = "Couldn't find your location. Go near a window and try again.";
+        error = "Couldn't get your location. Check that location is turned on, go near a window and try again.";
       } else {
         latitude = position.latitude;
         longitude = position.longitude;

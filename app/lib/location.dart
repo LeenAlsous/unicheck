@@ -60,19 +60,47 @@ class LocationHelper {
     }
   }
 
-  /// A new, precise location (never an old saved one), for setting where a section meets.
-  /// Returns null if it can't be found in 20 seconds.
+  /// A precise location, for setting where a section meets.
+  ///
+  /// Listens to the GPS for up to 10 seconds and keeps the most accurate reading, stopping
+  /// early once it's within 20 m. If the GPS gives nothing, uses the location the phone
+  /// found in the last 2 minutes. Returns null if there is no location at all.
   static Future<Position?> getPreciseLocation() async {
+    Position? best;
+    final startedAt = DateTime.now();
+
     try {
-      return await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.best,
-          timeLimit: Duration(seconds: 20),
-        ),
-      );
+      final positions =
+          Geolocator.getPositionStream(
+            locationSettings: const LocationSettings(
+              accuracy: LocationAccuracy.best,
+            ),
+          ).timeout(
+            const Duration(seconds: 10),
+          ); // gives up if no reading comes for 10 s
+
+      await for (final position in positions) {
+        if (best == null || position.accuracy < best.accuracy) {
+          best = position;
+        }
+        final tookTooLong =
+            DateTime.now().difference(startedAt).inSeconds >= 10;
+        if (position.accuracy <= 20 || tookTooLong) {
+          break; // good enough, or we've waited long enough
+        }
+      }
     } catch (e) {
-      return null;
+      // No reading in time, or a location error: use what we have.
     }
+
+    if (best != null) return best;
+
+    final last = await Geolocator.getLastKnownPosition();
+    if (last != null &&
+        DateTime.now().difference(last.timestamp).inMinutes < 2) {
+      return last;
+    }
+    return null;
   }
 
   /// Opens UniCheck's page in the phone's Settings, to allow location.
