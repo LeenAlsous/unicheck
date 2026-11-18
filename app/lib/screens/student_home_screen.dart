@@ -7,7 +7,8 @@ import 'login_screen.dart';
 import 'my_phones_screen.dart';
 import 'scan_screen.dart';
 
-/// The student's courses. Shows "Check-in open" when a lecture is running.
+/// The student's courses. When a lecture is running, its course shows a
+/// "Check-in open" button that opens the QR scanner.
 class StudentHomeScreen extends StatefulWidget {
   final User user;
 
@@ -95,11 +96,6 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
         ],
       ),
       body: buildBody(),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: openScanner,
-        icon: const Icon(Icons.qr_code_scanner),
-        label: const Text('Scan QR code'),
-      ),
     );
   }
 
@@ -125,14 +121,14 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     return RefreshIndicator(
       onRefresh: loadSections,
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(
-          16,
-          16,
-          16,
-          88,
-        ), // room for the Scan button
+        padding: const EdgeInsets.all(16),
         children: [
           Text('Hi, ${widget.user.name}'),
+          const SizedBox(height: 4),
+          const Text(
+            'When your instructor starts a lecture, pull down to refresh, '
+            'then tap "Check-in open" to scan the QR code.',
+          ),
           const SizedBox(height: 12),
           if (sections.isEmpty)
             const Text("You aren't enrolled in any courses."),
@@ -144,8 +140,14 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                   '${section.instructorName}, section ${section.number}',
                 ),
                 trailing: section.checkInOpen
-                    ? const Chip(label: Text('Check-in open'))
+                    ? FilledButton.icon(
+                        onPressed: openScanner,
+                        icon: const Icon(Icons.qr_code_scanner),
+                        label: const Text('Check-in open'),
+                      )
                     : null,
+                // Tapping the course also opens the scanner while check-in is open.
+                onTap: section.checkInOpen ? openScanner : null,
               ),
             ),
         ],

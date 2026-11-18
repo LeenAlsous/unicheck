@@ -28,7 +28,7 @@ for one student only, so you can't log in to a friend's account on your phone. S
 their phones under **My phones** (the phone icon on "My courses") and can remove a lost or
 sold one. Students can't log in on the web version; it is for instructors.
 
-**Students:** tap **Scan QR code** on "My courses". The app first gets the phone's location
+**Students:** when a lecture is running, its course on "My courses" shows a **Check-in open** button; tap it to scan the QR code (pull down to refresh if it isn't showing yet). The app first gets the phone's location
 (it asks for permission), then scans the QR on the lecture screen and checks in right away.
 If the server refuses, the student sees why (expired code, not in the room, fake location
 app...) and can scan again.
@@ -78,7 +78,7 @@ lib/
 └── screens/
     ├── start_screen.dart             ← checks if the user is already logged in
     ├── login_screen.dart
-    ├── student_home_screen.dart      ← "My courses" + Scan QR code button
+    ├── student_home_screen.dart      ← "My courses", Check-in open opens the scanner
     ├── scan_screen.dart              ← camera scanner + location, sends the check-in
     ├── my_phones_screen.dart         ← the student's phones, remove a lost one
     ├── students_screen.dart          ← a section's students + Import from Excel
