@@ -23,7 +23,8 @@ students icon → **Import from Excel**, headings `University ID` and `Name`). N
 first password is their university ID; the app makes them choose a new one at first login.
 Anyone can change their password with the lock icon on the home screen.
 
-**Excuses:** each course card has a collapsible **Options** section. Students use it to send an
+**Excuses:** each course card has a collapsible **Options** section. Students see their
+**remaining absences** there (excused lectures don't count), and use it to send an
 excuse (day, reason, note, and a photo from the camera or gallery, e.g. a medical report or
 exam schedule) and to see their excuses' status. Instructors use it to open the class list
 and to review excuses: view the photo, then approve (the student becomes excused for that

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\AttendanceRecord;
 use App\Models\Section;
 use App\Models\User;
 use App\Services\SpreadsheetReader;
@@ -14,7 +15,9 @@ class SectionController extends Controller
      * My sections (the home screen).
      *
      * Instructors get the sections they teach, students the ones they're enrolled in, admins all.
-     * `open_session` is set while a lecture is running.
+     * `open_session` is set while a lecture is running. For students, `my_absences` is how many
+     * lectures of the section they were absent from (excused ones don't count); the limit is
+     * `course.max_absences`.
      */
     public function index(Request $request)
     {
@@ -30,7 +33,18 @@ class SectionController extends Controller
             });
         }
 
-        return $query->orderBy('id')->get();
+        $sections = $query->orderBy('id')->get();
+
+        if ($user->role === 'student') {
+            foreach ($sections as $section) {
+                $section->my_absences = AttendanceRecord::where('student_id', $user->id)
+                    ->where('status', 'absent')
+                    ->whereHas('lectureSession', fn ($lecture) => $lecture->where('section_id', $section->id))
+                    ->count();
+            }
+        }
+
+        return $sections;
     }
 
     /**

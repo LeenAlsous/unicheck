@@ -166,6 +166,23 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                   CardOptions(
                     children: [
                       ListTile(
+                        leading: Icon(
+                          Icons.event_busy,
+                          // Red when the student can miss at most one more lecture.
+                          color: section.remainingAbsences <= 1
+                              ? Colors.red
+                              : null,
+                        ),
+                        title: Text(
+                          section.remainingAbsences == 0
+                              ? 'No absences left'
+                              : 'Remaining absences: ${section.remainingAbsences}',
+                        ),
+                        subtitle: Text(
+                          'You missed ${section.myAbsences} of ${section.maxAbsences} allowed',
+                        ),
+                      ),
+                      ListTile(
                         leading: const Icon(Icons.note_add_outlined),
                         title: const Text('Submit an excuse'),
                         subtitle: const Text('Medical report, exam clash...'),

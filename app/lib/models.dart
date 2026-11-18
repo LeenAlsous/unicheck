@@ -36,6 +36,8 @@ class Section {
   final String instructorName;
   final int studentsCount;
   final String? roomName; // e.g. "IT Building 101", or null if not set
+  final int maxAbsences; // absences allowed in this course
+  final int myAbsences; // students only: how many lectures they missed (excused ones don't count)
   final int? openSessionId; // the lecture running right now, or null
   final bool checkInOpen; // students can scan the QR right now
 
@@ -48,9 +50,15 @@ class Section {
     required this.instructorName,
     required this.studentsCount,
     required this.roomName,
+    required this.maxAbsences,
+    required this.myAbsences,
     required this.openSessionId,
     required this.checkInOpen,
   });
+
+  /// How many more lectures the student can miss (never below 0).
+  int get remainingAbsences =>
+      maxAbsences - myAbsences < 0 ? 0 : maxAbsences - myAbsences;
 
   bool get hasOpenSession => openSessionId != null;
 
@@ -67,6 +75,8 @@ class Section {
       instructorName: json['instructor']['name'],
       studentsCount: json['students_count'] ?? 0,
       roomName: room == null ? null : '${room['building']} ${room['name']}',
+      maxAbsences: json['course']['max_absences'] ?? 0,
+      myAbsences: json['my_absences'] ?? 0,
       openSessionId: session?['id'],
       checkInOpen: session != null && session['check_in_open'] == true,
     );

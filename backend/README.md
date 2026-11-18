@@ -174,7 +174,7 @@ All paths start with `/api`. The API docs page shows the full request and respon
 | `GET` | `/auth/me` | Anyone | Current user |
 | `POST` | `/auth/logout` | Anyone | Revoke the current token |
 | `POST` | `/auth/password` | Anyone | Change password (`current_password`, `new_password`, `new_password_confirmation`) |
-| `GET` | `/sections` | Anyone | Home screen: sections I teach / I'm enrolled in (admins: all), with `open_session` while check-in runs |
+| `GET` | `/sections` | Anyone | Home screen: sections I teach / I'm enrolled in (admins: all), with `open_session` while check-in runs; students also get `my_absences` |
 | `GET` | `/sections/{section}` | Anyone in the section | One section |
 | `GET` | `/sections/{section}/excuses` | Anyone in the section | Excuses: students get their own, the instructor gets all |
 | `POST` | `/sections/{section}/excuses` | Student | Send an excuse (`date`, `reason`, `note`, `photo`) |

@@ -8,7 +8,13 @@ void main() {
       'id': 1,
       'number': '1',
       'semester': '2026-1',
-      'course': {'id': 1, 'code': 'CS330', 'name': 'Database Systems'},
+      'course': {
+        'id': 1,
+        'code': 'CS330',
+        'name': 'Database Systems',
+        'max_absences': 6,
+      },
+      'my_absences': 2,
       'instructor': {'id': 2, 'name': 'Dr. Instructor One'},
       'default_room': {'id': 1, 'building': 'IT Building', 'name': '101'},
       'students_count': 8,
@@ -22,6 +28,8 @@ void main() {
     expect(section.studentsCount, 8);
     expect(section.hasOpenSession, true);
     expect(section.checkInOpen, true);
+    expect(section.myAbsences, 2);
+    expect(section.remainingAbsences, 4);
   });
 
   test('reads a section with no room and no lecture running', () {

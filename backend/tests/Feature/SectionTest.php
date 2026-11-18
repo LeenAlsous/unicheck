@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\LectureSession;
 use App\Models\Section;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -73,5 +74,34 @@ class SectionTest extends TestCase
 
         Sanctum::actingAs($students->first());
         $this->getJson("/api/sections/{$section->id}/students")->assertForbidden();
+    }
+
+    public function test_students_see_how_many_absences_they_have(): void
+    {
+        $student = User::factory()->create();
+        $section = Section::factory()->create();
+        $section->students()->attach($student);
+        foreach (['absent', 'absent', 'excused', 'present'] as $status) {
+            $lecture = LectureSession::factory()->for($section)->create();
+            $lecture->attendanceRecords()->create([
+                'student_id' => $student->id, 'status' => $status, 'source' => 'manual', 'recorded_at' => now(),
+            ]);
+        }
+        // An absence in another course doesn't count.
+        $other = LectureSession::factory()->create();
+        $other->section->students()->attach($student);
+        $other->attendanceRecords()->create([
+            'student_id' => $student->id, 'status' => 'absent', 'source' => 'auto', 'recorded_at' => now(),
+        ]);
+
+        Sanctum::actingAs($student);
+        $this->getJson('/api/sections')
+            ->assertOk()
+            ->assertJsonPath('0.my_absences', 2)
+            ->assertJsonPath('0.course.max_absences', 6)
+            ->assertJsonPath('1.my_absences', 1);
+
+        Sanctum::actingAs($section->instructor);
+        $this->getJson('/api/sections')->assertOk()->assertJsonMissingPath('0.my_absences');
     }
 }
