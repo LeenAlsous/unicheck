@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../api.dart';
+import '../location.dart';
 import '../models.dart';
 import '../widgets/card_options.dart';
 import 'change_password_screen.dart';
@@ -30,6 +31,8 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
   void initState() {
     super.initState();
     loadSections();
+    // Ask for location now, so the scan screen doesn't have to wait for it later.
+    LocationHelper.askPermission();
   }
 
   Future<void> loadSections() async {

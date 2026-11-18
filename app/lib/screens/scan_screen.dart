@@ -3,11 +3,13 @@ import 'package:geolocator/geolocator.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../api.dart';
+import '../location.dart';
 
 /// The student scans the QR code on the lecture screen to check in.
 ///
-/// We get the location first, so when a code is scanned we can send it right away
-/// (the code only works for 10–20 seconds).
+/// Order matters: location permission first, then the camera (Android can only show one
+/// permission popup at a time), then the location itself. When a code is scanned we
+/// already know where the phone is, so it's sent right away (the code only works for 10–20 s).
 class ScanScreen extends StatefulWidget {
   const ScanScreen({super.key});
 
@@ -16,7 +18,11 @@ class ScanScreen extends StatefulWidget {
 }
 
 class _ScanScreenState extends State<ScanScreen> {
-  final scanner = MobileScannerController(formats: [BarcodeFormat.qrCode]);
+  // The camera starts in prepare(), after the location permission.
+  final scanner = MobileScannerController(
+    formats: [BarcodeFormat.qrCode],
+    autoStart: false,
+  );
 
   Position? position; // the phone's location, null until we have it
   String? locationError;
@@ -28,7 +34,7 @@ class _ScanScreenState extends State<ScanScreen> {
   @override
   void initState() {
     super.initState();
-    getLocation();
+    prepare();
   }
 
   @override
@@ -37,39 +43,37 @@ class _ScanScreenState extends State<ScanScreen> {
     super.dispose();
   }
 
-  Future<void> getLocation() async {
-    setState(() => locationError = null);
+  Future<void> prepare() async {
+    setState(() {
+      locationError = null;
+      position = null;
+    });
 
-    try {
-      if (!await Geolocator.isLocationServiceEnabled()) {
-        setState(() => locationError = 'Turn on location (GPS) to check in.');
-        return;
-      }
-
-      var permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-      }
-      if (permission == LocationPermission.denied ||
-          permission == LocationPermission.deniedForever) {
-        setState(
-          () => locationError = 'UniCheck needs your location to check you in. Allow it in Settings.',
-        );
-        return;
-      }
-
-      final result = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.best,
-          timeLimit: Duration(seconds: 20),
-        ),
-      );
-      if (!mounted) return;
-      setState(() => position = result);
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => locationError = "Couldn't find your location. Try again.");
+    // 1. Location permission (usually already given on the home screen).
+    final problem = await LocationHelper.askPermission();
+    if (!mounted) return;
+    if (problem != null) {
+      setState(() => locationError = problem);
+      return;
     }
+
+    // 2. The camera (asks for camera permission the first time).
+    try {
+      await scanner.start();
+    } catch (e) {
+      // The camera's own error message is shown by MobileScanner's errorBuilder.
+    }
+
+    // 3. Where the phone is.
+    final result = await LocationHelper.getLocation();
+    if (!mounted) return;
+    setState(() {
+      position = result;
+      if (result == null) {
+        locationError =
+            "Couldn't find your location. Go near a window and try again.";
+      }
+    });
   }
 
   Future<void> onDetect(BarcodeCapture capture) async {
@@ -109,8 +113,7 @@ class _ScanScreenState extends State<ScanScreen> {
 
   Future<void> scanAgain() async {
     setState(() => success = null);
-    await scanner.start();
-    getLocation(); // the student may have moved
+    prepare(); // turns the camera back on and gets the location again
   }
 
   @override
@@ -157,12 +160,32 @@ class _ScanScreenState extends State<ScanScreen> {
       return Column(
         children: [
           Text(locationError!, textAlign: TextAlign.center),
-          TextButton(onPressed: getLocation, child: const Text('Try again')),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              TextButton(onPressed: prepare, child: const Text('Try again')),
+              TextButton(
+                onPressed: LocationHelper.openSettings,
+                child: const Text('Open Settings'),
+              ),
+            ],
+          ),
         ],
       );
     }
     if (position == null) {
-      return const Text('Finding your location...');
+      return const Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          SizedBox(
+            width: 16,
+            height: 16,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+          SizedBox(width: 12),
+          Text('Finding your location...'),
+        ],
+      );
     }
     return const Text('Point the camera at the QR code on the screen.');
   }
