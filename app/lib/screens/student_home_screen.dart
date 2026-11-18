@@ -174,12 +174,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                               : null,
                         ),
                         title: Text(
-                          section.remainingAbsences == 0
-                              ? 'No absences left'
-                              : 'Remaining absences: ${section.remainingAbsences}',
-                        ),
-                        subtitle: Text(
-                          'You missed ${section.myAbsences} of ${section.maxAbsences} allowed',
+                          'Remaining absences: ${section.remainingAbsences} of ${section.maxAbsences}',
                         ),
                       ),
                       ListTile(
