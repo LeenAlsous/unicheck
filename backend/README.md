@@ -117,6 +117,19 @@ php artisan import:enrollments enrollments.xlsx   # University ID, Course code, 
 `Course name` and `Instructor ID`. Running an import twice is safe: existing accounts and
 enrollments are skipped.
 
+## Excuses
+
+A student who misses (or will miss) a lecture can send an excuse from the app: course card →
+**Options** → **Submit an excuse**, with the day, a reason (`medical`, `exam` or `other`), a
+note and a photo of the document (e.g. a medical report or the exam schedule). Photos are
+stored in `storage/app/private/excuses` and only the student and the section's instructor
+can open them.
+
+The instructor reviews them under **Options** → **Excuses**. Approving one marks the student
+**excused** in that section's lectures on that day (unless they were present), and a lecture
+that ends later that day marks them excused instead of absent, so an exam clash can be sent
+in advance. An excuse can only be reviewed once.
+
 ## Authentication
 
 Laravel Sanctum bearer tokens. The app sends `POST /api/auth/login` with
@@ -163,6 +176,10 @@ All paths start with `/api`. The API docs page shows the full request and respon
 | `POST` | `/auth/password` | Anyone | Change password (`current_password`, `new_password`, `new_password_confirmation`) |
 | `GET` | `/sections` | Anyone | Home screen: sections I teach / I'm enrolled in (admins: all), with `open_session` while check-in runs |
 | `GET` | `/sections/{section}` | Anyone in the section | One section |
+| `GET` | `/sections/{section}/excuses` | Anyone in the section | Excuses: students get their own, the instructor gets all |
+| `POST` | `/sections/{section}/excuses` | Student | Send an excuse (`date`, `reason`, `note`, `photo`) |
+| `GET` | `/excuses/{excuse}/photo` | The student or the instructor | The excuse's photo |
+| `POST` | `/excuses/{excuse}/review` | Instructor | `status`: `approved` or `rejected` |
 | `POST` | `/check-ins` | Student | Check in with the scanned QR text and the phone's location |
 | `GET` | `/devices` | Student | My phones (`is_this_phone` marks the current one) |
 | `DELETE` | `/devices/{device}` | Student | Remove a lost or sold phone (logs it out) |

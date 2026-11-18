@@ -23,6 +23,12 @@ students icon → **Import from Excel**, headings `University ID` and `Name`). N
 first password is their university ID; the app makes them choose a new one at first login.
 Anyone can change their password with the lock icon on the home screen.
 
+**Excuses:** each course card has a collapsible **Options** section. Students use it to send an
+excuse (day, reason, note, and a photo from the camera or gallery, e.g. a medical report or
+exam schedule) and to see their excuses' status. Instructors use it to open the class list
+and to review excuses: view the photo, then approve (the student becomes excused for that
+day) or reject.
+
 **Phones:** a student can log in on several phones (lost or new phone), but each phone works
 for one student only, so you can't log in to a friend's account on your phone. Students see
 their phones under **My phones** (the phone icon on "My courses") and can remove a lost or
@@ -75,6 +81,7 @@ lib/
 ├── api.dart                          ← every call to the backend (login, sections, ...)
 ├── models.dart                       ← User, Section, Lecture, AttendanceList (JSON → Dart)
 ├── qr_code.dart                      ← makes the rotating QR code (same recipe as the backend)
+├── widgets/card_options.dart         ← the collapsible "Options" on course cards
 └── screens/
     ├── start_screen.dart             ← checks if the user is already logged in
     ├── login_screen.dart
@@ -83,6 +90,9 @@ lib/
     ├── my_phones_screen.dart         ← the student's phones, remove a lost one
     ├── students_screen.dart          ← a section's students + Import from Excel
     ├── change_password_screen.dart   ← change password (required after the first login)
+    ├── submit_excuse_screen.dart     ← student sends an excuse with a photo
+    ├── excuses_screen.dart           ← list of excuses (student: mine, instructor: all)
+    ├── excuse_screen.dart            ← one excuse with its photo; instructor approves or rejects
     ├── instructor_home_screen.dart   ← "My sections", tap one to start a lecture
     └── lecture_screen.dart           ← QR code + live attendance list
 ```

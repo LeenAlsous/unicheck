@@ -72,6 +72,27 @@ class Api {
     );
   }
 
+  /// Sends a file (and some text fields) as a form upload.
+  static Future<dynamic> _upload(
+    String path, {
+    required Map<String, String> fields,
+    required String fileField,
+    required List<int> fileBytes,
+    required String fileName,
+  }) {
+    final request = http.MultipartRequest('POST', Uri.parse(baseUrl + path));
+    request.headers.addAll(_headers);
+    request.headers.remove(
+      'Content-Type',
+    ); // the request sets its own for file uploads
+    request.fields.addAll(fields);
+    request.files.add(
+      http.MultipartFile.fromBytes(fileField, fileBytes, filename: fileName),
+    );
+
+    return _send(request.send().then(http.Response.fromStream));
+  }
+
   /// Waits for the response and returns its JSON, or throws an [ApiException].
   static Future<dynamic> _send(Future<http.Response> request) async {
     http.Response response;
@@ -223,19 +244,13 @@ class Api {
     List<int> fileBytes,
     String fileName,
   ) async {
-    final request = http.MultipartRequest(
-      'POST',
-      Uri.parse('$baseUrl/sections/$sectionId/students/import'),
+    final data = await _upload(
+      '/sections/$sectionId/students/import',
+      fields: {},
+      fileField: 'file',
+      fileBytes: fileBytes,
+      fileName: fileName,
     );
-    request.headers.addAll(_headers);
-    request.headers.remove(
-      'Content-Type',
-    ); // the request sets its own for file uploads
-    request.files.add(
-      http.MultipartFile.fromBytes('file', fileBytes, filename: fileName),
-    );
-
-    final data = await _send(request.send().then(http.Response.fromStream));
     return ImportResult.fromJson(data);
   }
 
@@ -271,5 +286,59 @@ class Api {
     await _put('/sessions/$sessionId/attendance/$studentId', {
       'status': status,
     });
+  }
+
+  // ---------- Excuses ----------
+
+  /// Students get their own excuses for this section; instructors get everyone's.
+  static Future<List<Excuse>> getExcuses(int sectionId) async {
+    final List data = await _get('/sections/$sectionId/excuses');
+    return data.map((json) => Excuse.fromJson(json)).toList();
+  }
+
+  /// Sends an excuse for missing the lectures on [date], with a photo of the document.
+  /// [reason] is "medical", "exam" or "other".
+  static Future<void> submitExcuse({
+    required int sectionId,
+    required DateTime date,
+    required String reason,
+    required String note,
+    required List<int> photoBytes,
+    required String photoName,
+  }) async {
+    final day =
+        '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+    await _upload(
+      '/sections/$sectionId/excuses',
+      fields: {'date': day, 'reason': reason, 'note': note},
+      fileField: 'photo',
+      fileBytes: photoBytes,
+      fileName: photoName,
+    );
+  }
+
+  /// The photo of an excuse, as image bytes.
+  static Future<Uint8List> getExcusePhoto(int excuseId) async {
+    http.Response response;
+    try {
+      response = await http.get(
+        Uri.parse('$baseUrl/excuses/$excuseId/photo'),
+        headers: _headers,
+      );
+    } catch (e) {
+      throw ApiException(
+        "Can't reach the server. Check your internet connection.",
+        0,
+      );
+    }
+    if (response.statusCode != 200) {
+      throw ApiException("Couldn't load the photo.", response.statusCode);
+    }
+    return response.bodyBytes;
+  }
+
+  /// Instructors: [status] is "approved" or "rejected".
+  static Future<void> reviewExcuse(int excuseId, String status) async {
+    await _post('/excuses/$excuseId/review', {'status': status});
   }
 }

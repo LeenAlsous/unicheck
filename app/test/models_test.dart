@@ -145,4 +145,22 @@ void main() {
     expect(result.added, 3);
     expect(result.problems, ['Row 4: no university ID.']);
   });
+
+  test('reads an excuse', () {
+    final excuse = Excuse.fromJson({
+      'id': 1,
+      'section_id': 1,
+      'student_id': 4,
+      'date': '2026-11-18',
+      'reason': 'exam',
+      'note': 'Calculus final',
+      'status': 'pending',
+      'student': {'id': 4, 'university_id': 'S0001', 'name': 'Student 1'},
+    });
+
+    expect(excuse.reasonLabel, 'Exam clash');
+    expect(excuse.statusLabel, 'Waiting for review');
+    expect(excuse.dateLabel, '18/11/2026');
+    expect(excuse.studentUniversityId, 'S0001');
+  });
 }

@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AttendanceController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CheckInController;
 use App\Http\Controllers\Api\DeviceController;
+use App\Http\Controllers\Api\ExcuseController;
 use App\Http\Controllers\Api\LectureSessionController;
 use App\Http\Controllers\Api\RoomController;
 use App\Http\Controllers\Api\SectionController;
@@ -19,6 +20,12 @@ Route::middleware('auth:sanctum')->group(function () {
     // Both roles: each sees only their own sections.
     Route::get('/sections', [SectionController::class, 'index']);
     Route::get('/sections/{section}', [SectionController::class, 'show']);
+
+    // Excuses: students send them, the section's instructor reviews them.
+    Route::get('/sections/{section}/excuses', [ExcuseController::class, 'index']);
+    Route::post('/sections/{section}/excuses', [ExcuseController::class, 'store'])->middleware('role:student');
+    Route::get('/excuses/{excuse}/photo', [ExcuseController::class, 'photo']);
+    Route::post('/excuses/{excuse}/review', [ExcuseController::class, 'review'])->middleware('role:instructor,admin');
 
     Route::post('/check-ins', [CheckInController::class, 'store'])->middleware(['role:student', 'throttle:20,1']);
     Route::get('/devices', [DeviceController::class, 'index'])->middleware('role:student');

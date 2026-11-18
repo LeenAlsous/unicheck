@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 
 import '../api.dart';
 import '../models.dart';
+import '../widgets/card_options.dart';
 import 'change_password_screen.dart';
+import 'excuses_screen.dart';
 import 'login_screen.dart';
 import 'my_phones_screen.dart';
 import 'scan_screen.dart';
+import 'submit_excuse_screen.dart';
 
 /// The student's courses. When a lecture is running, its course shows a
 /// "Check-in open" button that opens the QR scanner.
@@ -134,20 +137,62 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
             const Text("You aren't enrolled in any courses."),
           for (final section in sections)
             Card(
-              child: ListTile(
-                title: Text('${section.courseCode} - ${section.courseName}'),
-                subtitle: Text(
-                  '${section.instructorName}, section ${section.number}',
-                ),
-                trailing: section.checkInOpen
-                    ? FilledButton.icon(
-                        onPressed: openScanner,
-                        icon: const Icon(Icons.qr_code_scanner),
-                        label: const Text('Check-in open'),
-                      )
-                    : null,
-                // Tapping the course also opens the scanner while check-in is open.
-                onTap: section.checkInOpen ? openScanner : null,
+              clipBehavior: Clip.antiAlias,
+              child: Column(
+                children: [
+                  ListTile(
+                    title: Text(
+                      '${section.courseCode} - ${section.courseName}',
+                    ),
+                    subtitle: Text(
+                      '${section.instructorName}, section ${section.number}',
+                    ),
+                    // Tapping the course also opens the scanner while check-in is open.
+                    onTap: section.checkInOpen ? openScanner : null,
+                  ),
+                  // Under the course name, so the name has the full width.
+                  if (section.checkInOpen)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: FilledButton.icon(
+                          onPressed: openScanner,
+                          icon: const Icon(Icons.qr_code_scanner),
+                          label: const Text('Check-in open'),
+                        ),
+                      ),
+                    ),
+                  CardOptions(
+                    children: [
+                      ListTile(
+                        leading: const Icon(Icons.note_add_outlined),
+                        title: const Text('Submit an excuse'),
+                        subtitle: const Text('Medical report, exam clash...'),
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                SubmitExcuseScreen(section: section),
+                          ),
+                        ),
+                      ),
+                      ListTile(
+                        leading: const Icon(Icons.history),
+                        title: const Text('My excuses'),
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ExcusesScreen(
+                              section: section,
+                              isInstructor: false,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
         ],

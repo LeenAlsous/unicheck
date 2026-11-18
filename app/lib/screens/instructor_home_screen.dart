@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import '../api.dart';
 import '../models.dart';
 import 'lecture_screen.dart';
+import '../widgets/card_options.dart';
 import 'change_password_screen.dart';
+import 'excuses_screen.dart';
 import 'login_screen.dart';
 import 'students_screen.dart';
 
@@ -160,29 +162,57 @@ class _InstructorHomeScreenState extends State<InstructorHomeScreen> {
           if (sections.isEmpty) const Text("You don't teach any sections."),
           for (final section in sections)
             Card(
-              child: ListTile(
-                leading: IconButton(
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => StudentsScreen(section: section),
+              clipBehavior: Clip.antiAlias,
+              child: Column(
+                children: [
+                  ListTile(
+                    title: Text(
+                      '${section.courseCode} - ${section.courseName} (section ${section.number})',
                     ),
+                    subtitle: Text(
+                      '${section.studentsCount} students'
+                      '${section.roomName != null ? ', ${section.roomName}' : ''}'
+                      ', ${section.semester}',
+                    ),
+                    trailing: section.hasOpenSession
+                        ? const Chip(label: Text('Lecture running'))
+                        : const Icon(Icons.play_circle_outline),
+                    onTap: () => openLecture(section),
                   ),
-                  icon: const Icon(Icons.groups_outlined),
-                  tooltip: 'Students',
-                ),
-                title: Text(
-                  '${section.courseCode} - ${section.courseName} (section ${section.number})',
-                ),
-                subtitle: Text(
-                  '${section.studentsCount} students'
-                  '${section.roomName != null ? ', ${section.roomName}' : ''}'
-                  ', ${section.semester}',
-                ),
-                trailing: section.hasOpenSession
-                    ? const Chip(label: Text('Lecture running'))
-                    : const Icon(Icons.play_circle_outline),
-                onTap: () => openLecture(section),
+                  CardOptions(
+                    children: [
+                      ListTile(
+                        leading: const Icon(Icons.groups_outlined),
+                        title: const Text('Students'),
+                        subtitle: const Text('Class list, import from Excel'),
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                StudentsScreen(section: section),
+                          ),
+                        ),
+                      ),
+                      ListTile(
+                        leading: const Icon(Icons.assignment_outlined),
+                        title: const Text('Excuses'),
+                        subtitle: const Text('Review students\' excuses'),
+                        onTap: () async {
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ExcusesScreen(
+                                section: section,
+                                isInstructor: true,
+                              ),
+                            ),
+                          );
+                          loadSections();
+                        },
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
         ],

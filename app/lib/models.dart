@@ -253,3 +253,62 @@ class ImportResult {
     );
   }
 }
+
+/// A student's excuse for missing the lectures of a section on one day.
+class Excuse {
+  final int id;
+  final DateTime date;
+  final String reason; // "medical", "exam" or "other"
+  final String? note;
+  final String status; // "pending", "approved" or "rejected"
+  final String studentName;
+  final String studentUniversityId;
+
+  Excuse({
+    required this.id,
+    required this.date,
+    required this.reason,
+    required this.note,
+    required this.status,
+    required this.studentName,
+    required this.studentUniversityId,
+  });
+
+  String get reasonLabel {
+    switch (reason) {
+      case 'medical':
+        return 'Medical';
+      case 'exam':
+        return 'Exam clash';
+      default:
+        return 'Other';
+    }
+  }
+
+  String get statusLabel {
+    switch (status) {
+      case 'approved':
+        return 'Approved';
+      case 'rejected':
+        return 'Rejected';
+      default:
+        return 'Waiting for review';
+    }
+  }
+
+  String get dateLabel => '${date.day}/${date.month}/${date.year}';
+
+  factory Excuse.fromJson(Map<String, dynamic> json) {
+    final student = json['student'];
+
+    return Excuse(
+      id: json['id'],
+      date: DateTime.parse(json['date']),
+      reason: json['reason'],
+      note: json['note'],
+      status: json['status'],
+      studentName: student?['name'] ?? '',
+      studentUniversityId: student?['university_id'] ?? '',
+    );
+  }
+}

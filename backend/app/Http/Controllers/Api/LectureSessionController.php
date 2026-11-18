@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Excuse;
 use App\Models\LectureSession;
 use App\Models\Section;
 use Illuminate\Http\Request;
@@ -100,13 +101,22 @@ class LectureSessionController extends Controller
 
             $alreadyRecorded = $session->attendanceRecords()->pluck('student_id');
 
+            // Students whose excuse for today's lecture was approved are excused, not absent.
+            $excusedStudents = Excuse::where('section_id', $session->section_id)
+                ->where('status', 'approved')
+                ->whereDate('date', $session->opened_at)
+                ->pluck('student_id');
+
             foreach ($session->section->students as $student) {
                 if (! $alreadyRecorded->contains($student->id)) {
+                    $excused = $excusedStudents->contains($student->id);
+
                     $session->attendanceRecords()->create([
                         'student_id' => $student->id,
-                        'status' => 'absent',
+                        'status' => $excused ? 'excused' : 'absent',
                         'source' => 'auto',
                         'recorded_at' => now(),
+                        'note' => $excused ? 'Excuse approved' : null,
                     ]);
                 }
             }

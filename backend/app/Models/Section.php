@@ -37,6 +37,11 @@ class Section extends Model
         return $this->hasMany(LectureSession::class);
     }
 
+    public function excuses()
+    {
+        return $this->hasMany(Excuse::class);
+    }
+
     // The lecture running right now, if any. A section has at most one.
     public function openSession()
     {
