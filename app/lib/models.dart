@@ -35,7 +35,12 @@ class Section {
   final String courseName;
   final String instructorName;
   final int studentsCount;
-  final String? roomName; // e.g. "IT Building 101", or null if not set
+  // Where the section meets. The instructor's own setting if there is one, otherwise the
+  // section's usual room. All null if neither is set.
+  final String? building; // e.g. "Science Faculty"
+  final String? roomNumber; // e.g. "204"
+  final double? latitude; // the point students must be near to check in
+  final double? longitude;
   final int maxAbsences; // absences allowed in this course
   final int myAbsences; // students only: how many lectures they missed (excused ones don't count)
   final int? openSessionId; // the lecture running right now, or null
@@ -49,7 +54,10 @@ class Section {
     required this.courseName,
     required this.instructorName,
     required this.studentsCount,
-    required this.roomName,
+    required this.building,
+    required this.roomNumber,
+    required this.latitude,
+    required this.longitude,
     required this.maxAbsences,
     required this.myAbsences,
     required this.openSessionId,
@@ -62,9 +70,13 @@ class Section {
 
   bool get hasOpenSession => openSessionId != null;
 
+  /// e.g. "Science Faculty 204", or null if not set.
+  String? get roomName => building == null ? null : '$building $roomNumber';
+
   factory Section.fromJson(Map<String, dynamic> json) {
     final room = json['default_room'];
     final session = json['open_session'];
+    final hasOwnLocation = json['latitude'] != null;
 
     return Section(
       id: json['id'],
@@ -74,7 +86,14 @@ class Section {
       courseName: json['course']['name'],
       instructorName: json['instructor']['name'],
       studentsCount: json['students_count'] ?? 0,
-      roomName: room == null ? null : '${room['building']} ${room['name']}',
+      building: hasOwnLocation ? json['building'] : room?['building'],
+      roomNumber: hasOwnLocation ? json['room_number'] : room?['name'],
+      latitude: hasOwnLocation
+          ? (json['latitude'] as num).toDouble()
+          : (room?['latitude'] as num?)?.toDouble(),
+      longitude: hasOwnLocation
+          ? (json['longitude'] as num).toDouble()
+          : (room?['longitude'] as num?)?.toDouble(),
       maxAbsences: json['course']['max_absences'] ?? 0,
       myAbsences: json['my_absences'] ?? 0,
       openSessionId: session?['id'],

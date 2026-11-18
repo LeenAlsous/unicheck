@@ -76,11 +76,14 @@ class CheckInController extends Controller
             $this->reject('location', 'Turn off fake-location apps to check in.');
         }
 
-        $room = $session->room;
-        $distance = $this->distanceInMeters($latitude, $longitude, $room->latitude, $room->longitude);
+        $point = $session->checkInPoint(); // the section's location, or the room's
+        if (! $point) {
+            $this->reject('location', "Your instructor hasn't set where this class is yet.");
+        }
+        $distance = $this->distanceInMeters($latitude, $longitude, $point['latitude'], $point['longitude']);
         // GPS can be off by a bit, so we forgive the phone's reported error, but at most 50 m.
         $allowedError = min($accuracy, 50);
-        if ($distance - $allowedError > $room->radius_meters) {
+        if ($distance - $allowedError > $point['radius']) {
             $this->reject('location', 'You need to be in the lecture room to check in.');
         }
 

@@ -13,11 +13,13 @@ import '../qr_code.dart';
 class LectureScreen extends StatefulWidget {
   final int sessionId;
   final String title; // e.g. "CS330 - Database Systems"
+  final String? place; // where the section meets, e.g. "Science Faculty 204"
 
   const LectureScreen({
     super.key,
     required this.sessionId,
     required this.title,
+    this.place,
   });
 
   @override
@@ -249,7 +251,7 @@ class _LectureScreenState extends State<LectureScreen> {
           Text('Scan with the UniCheck app', style: textTheme.titleMedium),
           Text(
             'Check-in closes in $minutes:$seconds'
-            '${lecture!.roomName != null ? '  ·  ${lecture!.roomName}' : ''}',
+            '${widget.place != null ? '  ·  ${widget.place}' : ''}',
           ),
         ],
       ),

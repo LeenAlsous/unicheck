@@ -145,4 +145,33 @@ class SectionController extends Controller
             'problems' => $problems,
         ];
     }
+
+    /**
+     * Set where this section meets (its instructor).
+     *
+     * The building, the room number and the GPS point (the instructor's position, taken in
+     * the room). Students must be near this point to check in. Only this section changes.
+     */
+    public function updateLocation(Request $request, Section $section)
+    {
+        if (! $section->canManage($request->user())) {
+            abort(403);
+        }
+
+        $request->validate([
+            'building' => 'required|string|max:100', // e.g. "Science Faculty"
+            'room_number' => 'required|string|max:50', // e.g. "204"
+            'latitude' => 'required|numeric|between:-90,90',
+            'longitude' => 'required|numeric|between:-180,180',
+            // Only sent when the instructor used their current location. A rough location
+            // would make check-ins fail for students sitting in the room.
+            'accuracy_meters' => 'nullable|numeric|max:100',
+        ], [
+            'accuracy_meters.max' => 'Your location is not precise enough. Go near a window and try again.',
+        ]);
+
+        $section->update($request->only(['building', 'room_number', 'latitude', 'longitude']));
+
+        return $section->load(['course', 'instructor', 'defaultRoom', 'openSession'])->loadCount('students');
+    }
 }

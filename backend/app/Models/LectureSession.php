@@ -42,6 +42,22 @@ class LectureSession extends Model
         return $this->hasMany(AttendanceRecord::class);
     }
 
+    // Where students must be to check in: the section's own location if its instructor set one,
+    // otherwise the lecture's room. Null if neither is known.
+    public function checkInPoint(): ?array
+    {
+        $section = $this->section;
+        if ($section->latitude !== null) {
+            return ['latitude' => $section->latitude, 'longitude' => $section->longitude, 'radius' => 75];
+        }
+
+        if ($this->room) {
+            return ['latitude' => $this->room->latitude, 'longitude' => $this->room->longitude, 'radius' => $this->room->radius_meters];
+        }
+
+        return null;
+    }
+
     // Students can check in while the session is open and the check-in time hasn't ended.
     public function getCheckInOpenAttribute(): bool
     {

@@ -30,6 +30,10 @@ exam schedule) and to see their excuses' status. Instructors use it to open the 
 and to review excuses: view the photo, then approve (the student becomes excused for that
 day) or reject.
 
+**Section location:** instructors set where each section meets under **Options** →
+**Section location**: building, room number, and "Use my current location" while standing in
+the room. The app asks instructors (and students) for location permission when it opens.
+
 **Phones:** a student can log in on several phones (lost or new phone), but each phone works
 for one student only, so you can't log in to a friend's account on your phone. Students see
 their phones under **My phones** (the phone icon on "My courses") and can remove a lost or
@@ -82,6 +86,7 @@ lib/
 ├── api.dart                          ← every call to the backend (login, sections, ...)
 ├── models.dart                       ← User, Section, Lecture, AttendanceList (JSON → Dart)
 ├── qr_code.dart                      ← makes the rotating QR code (same recipe as the backend)
+├── location.dart                     ← location permission and the phone's position
 ├── widgets/card_options.dart         ← the collapsible "Options" on course cards
 └── screens/
     ├── start_screen.dart             ← checks if the user is already logged in
@@ -94,6 +99,7 @@ lib/
     ├── submit_excuse_screen.dart     ← student sends an excuse with a photo
     ├── excuses_screen.dart           ← list of excuses (student: mine, instructor: all)
     ├── excuse_screen.dart            ← one excuse with its photo; instructor approves or rejects
+    ├── section_location_screen.dart  ← instructor sets building, room number and GPS point
     ├── instructor_home_screen.dart   ← "My sections", tap one to start a lecture
     └── lecture_screen.dart           ← QR code + live attendance list
 ```

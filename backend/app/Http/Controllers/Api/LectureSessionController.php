@@ -53,8 +53,10 @@ class LectureSessionController extends Controller
         }
 
         $roomId = $request->room_id ?? $section->default_room_id;
-        if (! $roomId) {
-            throw ValidationException::withMessages(['room_id' => 'Choose a room: this section has no usual room.']);
+        if (! $roomId && $section->latitude === null) {
+            throw ValidationException::withMessages([
+                'room_id' => 'Set where this section meets first: Options, then Section location.',
+            ]);
         }
 
         $session = $section->lectureSessions()->create([

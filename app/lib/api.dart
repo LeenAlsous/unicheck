@@ -231,6 +231,30 @@ class Api {
 
   // ---------- Instructors ----------
 
+  /// Sets where a section meets. [accuracy] is only sent when the instructor used their
+  /// current location. Returns the updated section.
+  static Future<Section> setSectionLocation({
+    required int sectionId,
+    required String building,
+    required String roomNumber,
+    required double latitude,
+    required double longitude,
+    double? accuracy,
+  }) async {
+    final body = <String, dynamic>{
+      'building': building,
+      'room_number': roomNumber,
+      'latitude': latitude,
+      'longitude': longitude,
+    };
+    if (accuracy != null) {
+      body['accuracy_meters'] = accuracy;
+    }
+
+    final data = await _put('/sections/$sectionId/location', body);
+    return Section.fromJson(data);
+  }
+
   /// The students in a section.
   static Future<List<Student>> getStudents(int sectionId) async {
     final List data = await _get('/sections/$sectionId/students');

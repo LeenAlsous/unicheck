@@ -9,7 +9,7 @@
 	<key>NSCameraUsageDescription</key>
 	<string>UniCheck uses the camera to scan the attendance QR code and to take photos of excuse documents.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>UniCheck checks that you are in the lecture room when you check in.</string>
+	<string>UniCheck uses your location to check that students are in the lecture room, and to let instructors set where their class meets.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>UniCheck lets you choose a photo of your excuse document, like a medical report.</string>
 	<key>NSLocalNetworkUsageDescription</key>

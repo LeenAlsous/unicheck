@@ -16,7 +16,13 @@ void main() {
       },
       'my_absences': 2,
       'instructor': {'id': 2, 'name': 'Dr. Instructor One'},
-      'default_room': {'id': 1, 'building': 'IT Building', 'name': '101'},
+      'default_room': {
+        'id': 1,
+        'building': 'IT Building',
+        'name': '101',
+        'latitude': 31.9539,
+        'longitude': 35.9106,
+      },
       'students_count': 8,
       'open_session': {'id': 7, 'check_in_open': true},
     });
@@ -25,6 +31,7 @@ void main() {
     expect(section.courseName, 'Database Systems');
     expect(section.instructorName, 'Dr. Instructor One');
     expect(section.roomName, 'IT Building 101');
+    expect(section.latitude, 31.9539);
     expect(section.studentsCount, 8);
     expect(section.hasOpenSession, true);
     expect(section.checkInOpen, true);
@@ -170,5 +177,30 @@ void main() {
     expect(excuse.statusLabel, 'Waiting for review');
     expect(excuse.dateLabel, '18/11/2026');
     expect(excuse.studentUniversityId, 'S0001');
+  });
+
+  test("the section's own location wins over its usual room", () {
+    final section = Section.fromJson({
+      'id': 3,
+      'number': '1',
+      'semester': '2026-1',
+      'course': {'id': 1, 'code': 'CS330', 'name': 'Database Systems'},
+      'instructor': {'id': 2, 'name': 'Dr. Instructor One'},
+      'default_room': {
+        'id': 1,
+        'building': 'IT Building',
+        'name': '101',
+        'latitude': 31.9539,
+        'longitude': 35.9106,
+      },
+      'building': 'Science Faculty',
+      'room_number': '204',
+      'latitude': 32.0539,
+      'longitude': 35.9106,
+      'open_session': null,
+    });
+
+    expect(section.roomName, 'Science Faculty 204');
+    expect(section.latitude, 32.0539);
   });
 }

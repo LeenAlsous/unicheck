@@ -10,7 +10,17 @@ class Section extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['course_id', 'number', 'semester', 'instructor_id', 'default_room_id'];
+    protected $fillable = [
+        'course_id', 'number', 'semester', 'instructor_id', 'default_room_id',
+        'building', 'room_number', 'latitude', 'longitude',
+    ];
+
+    // building, room_number, latitude, longitude: the section's own location, set by its
+    // instructor (null until set). Students must be near this point to check in.
+    protected $casts = [
+        'latitude' => 'float',
+        'longitude' => 'float',
+    ];
 
     public function course()
     {

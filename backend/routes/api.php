@@ -34,6 +34,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('role:instructor,admin')->group(function () {
         Route::get('/rooms', [RoomController::class, 'index']);
         Route::get('/sections/{section}/students', [SectionController::class, 'students']);
+        Route::put('/sections/{section}/location', [SectionController::class, 'updateLocation']);
         Route::post('/sections/{section}/students/import', [SectionController::class, 'importStudents']);
         Route::get('/sections/{section}/sessions', [LectureSessionController::class, 'index']);
         Route::post('/sections/{section}/sessions', [LectureSessionController::class, 'store']);

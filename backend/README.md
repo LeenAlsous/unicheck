@@ -117,6 +117,14 @@ php artisan import:enrollments enrollments.xlsx   # University ID, Course code, 
 `Course name` and `Instructor ID`. Running an import twice is safe: existing accounts and
 enrollments are skipped.
 
+## Section location
+
+Each section can have its own location, set by its instructor in the app (course card →
+**Options** → **Section location**): the building (e.g. "Science Faculty"), the room number,
+and a GPS point taken while standing in the room. Check-ins are measured from this point
+(within 75 m). It only changes that section, not the shared room. Sections without their own
+location use their usual room's point.
+
 ## Excuses
 
 A student who misses (or will miss) a lecture can send an excuse from the app: course card →
@@ -185,6 +193,7 @@ All paths start with `/api`. The API docs page shows the full request and respon
 | `DELETE` | `/devices/{device}` | Student | Remove a lost or sold phone (logs it out) |
 | `GET` | `/rooms` | Instructor | Rooms to choose from |
 | `GET` | `/sections/{section}/students` | Instructor | Class list |
+| `PUT` | `/sections/{section}/location` | Instructor | Set where the section meets: `building`, `room_number`, `latitude`, `longitude` (+ `accuracy_meters` when taken from GPS) |
 | `POST` | `/sections/{section}/students/import` | Instructor | Add students from an Excel/CSV `file` (headings `University ID`, `Name`) |
 | `GET` | `/sections/{section}/sessions` | Instructor | Past and current lectures with present/absent counts |
 | `POST` | `/sections/{section}/sessions` | Instructor | Start a lecture: opens check-in (15 min by default) and returns `qr_secret` |

@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 
 import '../api.dart';
+import '../location.dart';
 import '../models.dart';
 import 'lecture_screen.dart';
 import '../widgets/card_options.dart';
 import 'change_password_screen.dart';
 import 'excuses_screen.dart';
 import 'login_screen.dart';
+import 'section_location_screen.dart';
 import 'students_screen.dart';
 
 /// The sections an instructor teaches (admins see all sections).
@@ -28,6 +30,8 @@ class _InstructorHomeScreenState extends State<InstructorHomeScreen> {
   void initState() {
     super.initState();
     loadSections();
+    // Ask for location now; it's needed to set where a section meets.
+    LocationHelper.askPermission();
   }
 
   Future<void> loadSections() async {
@@ -91,6 +95,7 @@ class _InstructorHomeScreenState extends State<InstructorHomeScreen> {
         builder: (context) => LectureScreen(
           sessionId: sessionId!,
           title: '${section.courseCode} - ${section.courseName}',
+          place: section.roomName,
         ),
       ),
     );
@@ -205,6 +210,21 @@ class _InstructorHomeScreenState extends State<InstructorHomeScreen> {
                                 section: section,
                                 isInstructor: true,
                               ),
+                            ),
+                          );
+                          loadSections();
+                        },
+                      ),
+                      ListTile(
+                        leading: const Icon(Icons.place_outlined),
+                        title: const Text('Section location'),
+                        subtitle: Text(section.roomName ?? 'Not set yet'),
+                        onTap: () async {
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  SectionLocationScreen(section: section),
                             ),
                           );
                           loadSections();
